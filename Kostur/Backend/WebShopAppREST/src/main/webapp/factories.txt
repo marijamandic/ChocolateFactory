@@ -1,0 +1,5 @@
+0;Stark;08:00;18:00;0;Stark.png;0;1;2;6
+1;Pionir;09:00;17:00;1;Pionir.png;3;4
+2;Nestle;08:00;18:00;2;Nestle.png;0;1;2
+3;Kandit;07:00;15:00;3;Kandit.png;3;4
+4;Dr.Oetker;07:00;15:00;4;Dr.Oetker.png;3;4

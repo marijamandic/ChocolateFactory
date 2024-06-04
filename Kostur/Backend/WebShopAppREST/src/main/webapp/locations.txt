@@ -1,0 +1,5 @@
+0;44.7866;20.4489;Knez Mihailova 6
+1;40.7128;74.0060;123 Broadway, New York, NY
+2;51.5074;0.1278;10 Downing St, Westminster, London
+3;48.8566;2.3522;Eiffel Tower, Champ de Mars, Paris
+4;35.6895;139.6917;Shibuya Crossing, Shibuya, Tokyo

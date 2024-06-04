@@ -1,0 +1,6 @@
+0;Milk Chocolate;2.5;ORDINARY;1;MILK;100;Creamy milk chocolate;Milk_Chocolate.jpg;true;50;false
+1;Dark Chocolate;3.0;FOR_DRINKING;0;DARK;80;Rich dark chocolate;Dark_Chocolate.jpg;true;30;false
+2;White Chocolate;2.7;ORDINARY;0;WHITE;90;Smooth white chocolate;White_Chocolate.jpg;true;40;false
+3;Hazelnut Chocolate;3.5;FOR_DRINKING;1;FLAVORED;120;Delicious hazelnut chocolate;Dark_Chocolate.jpg;true;60;false
+4;Almond Chocolate;3.2;GIFT;1;FLAVORED;110;Crunchy almond chocolate;Milk_Chocolate.jpg;true;55;false
+6;knjiga;52.0;FOR_COOKING;0;MILK;52;cdsfsdfsdfs;Milk_Chocolate.jpg;false;0;false
