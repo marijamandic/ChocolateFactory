@@ -27,6 +27,7 @@ public class FactoryService {
 		if (ctx.getAttribute("factoryDAO") == null) {
 	    	String contextPath = ctx.getRealPath("");
 			ctx.setAttribute("factoryDAO", new FactoryDAO(contextPath));
+			System.out.println("FactoryDAO initialized");
 		}
 	}
 	
