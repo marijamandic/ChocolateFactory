@@ -15,8 +15,26 @@
       <!-- Prikaz informacija o fabrici -->
       <img :src="getFactoryImagePath(factory.logo)" :alt="factory.alt">
       <h2>{{ factory.name }}</h2>
+      <p>Visiting Time: {{ formatTime(factory.openTime) }} - {{ formatTime(factory.closeTime) }} 
+        <span v-if="isFactoryOpen(factory.openTime, factory.closeTime)"> (Open Now)</span>
+        <span v-else> (Closed Now)</span>
+      </p>
       <p>Location: {{ factory.location.address }}</p>
       <p>Rating: {{ factory.rating }}</p>
+
+      <h3>Chocolates:</h3>
+      <ul v-if="chocolates.length > 0" class="chocolates-list">
+        <li v-for="chocolate in chocolates" :key="chocolate.uuid" class="chocolate-item">
+          <!-- Prikaz čokolade -->
+          <div>{{ chocolate.name }}</div>
+          <button @click="deleteChocolate(chocolate.uuid)">Delete</button>
+        </li>
+      </ul>
+      <p v-else>No chocolates available.</p>
+
+      <h3>Comments:</h3>
+      <p>There is no comments yet</p>
+
       
       <!-- Ostatak informacija o fabrici -->
       <!-- Dugme za dodavanje čokolade -->
@@ -36,6 +54,8 @@ import { useRouter, useRoute } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
 const factory = ref(null);
+const chocolates = ref([]);
+const isDeleted = ref(false);
 
 onMounted(() => {
   // Učitavanje informacija o fabrici
@@ -45,10 +65,13 @@ onMounted(() => {
 const getFactoryImagePath = (imageName) => `/assets/FactoryLogos/${imageName}`;
 
 function fetchFactory() {
-  const factoryId = route.params.id; // Čitanje ID fabrike iz dinamičkog segmenta rute
+  const factoryId = route.params.id;
   axios.get(`http://localhost:8080/WebShopAppREST/rest/factories/${factoryId}`)
     .then(response => {
       factory.value = response.data;
+      chocolates.value = factory.value.chocolates.map(chocolate => {
+        return { ...chocolate, uuid: generateUUID() }; // Dodavanje uuid-a za svaku čokoladu
+      });
     })
     .catch(error => {
       console.error('Error loading factory:', error);
@@ -56,8 +79,45 @@ function fetchFactory() {
     });
 }
 
+// Funkcija za generisanje jedinstvenog identifikatora
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0,
+      v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+// Funkcija za brisanje čokolade sa odabranim uuid-om
+function deleteChocolate(chocolateId) {
+  // Pronalaženje indeksa čokolade sa datim uuid-om
+  const index = chocolates.value.findIndex(chocolate => chocolate.uuid === chocolateId);
+  if (index !== -1) {
+    chocolates.value.splice(index, 1); // Uklanjanje čokolade iz liste
+  }
+}
+
 function goToAddChocolate() {
   router.push({ path: '/add-chocolate' });
+}
+
+function isFactoryOpen(openTime, closeTime) {
+  const currentTime = new Date();
+  const [openHour, openMinute] = openTime.split(':').map(Number);
+  const [closeHour, closeMinute] = closeTime.split(':').map(Number);
+
+  const openDate = new Date(currentTime);
+  openDate.setHours(openHour, openMinute);
+
+  const closeDate = new Date(currentTime);
+  closeDate.setHours(closeHour, closeMinute);
+
+  return currentTime >= openDate && currentTime <= closeDate;
+}
+
+function formatTime(time) {
+  const [hour, minute] = time.split(':');
+  return `${hour}:${minute}`;
 }
 </script>
 
@@ -160,6 +220,18 @@ button:hover {
   margin-right: 10px;
   color: #4CAF50;
   margin-top: 5px; /* Dodata razdaljina između naziva i ocene */
+}
+
+.chocolate-item {
+  margin-bottom: 20px; /* Dodat razmak od 100 piksela ispod svake stavke čokolade */
+}
+
+.chocolate-details {
+  margin-right: 100px; /* Dodat razmak od 100 piksela između naziva i dugmeta */
+}
+
+.chocolate-details button {
+  margin-left: 100px; /* Dodat razmak od 100 piksela s leve strane dugmeta */
 }
 </style>
 

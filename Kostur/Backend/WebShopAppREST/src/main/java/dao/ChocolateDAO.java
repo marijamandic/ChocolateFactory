@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,9 +42,10 @@ public class ChocolateDAO {
     }
 
     public Collection<Chocolate> findAll() {
-        return chocolates.values().stream()
-                         .filter(chocolate -> !chocolate.getIsDeleted())
-                         .collect(Collectors.toList());
+//        return chocolates.values().stream()
+//                         .filter(chocolate -> !chocolate.getIsDeleted())
+//                         .collect(Collectors.toList());
+    	return chocolates.values();
     }
 	
 	private void loadChocolates(String contextPath) {
@@ -161,6 +163,17 @@ public class ChocolateDAO {
     }
 */
 	
+	public Collection<Chocolate> getChocolateByFactory(String factoryId) {
+		Collection<Chocolate> filteredChocolates = new ArrayList<>();
+	    
+	    for (Chocolate chocolate : chocolates.values()) {
+	        if (chocolate.getFactory().getId().equals(factoryId)) {
+	        	filteredChocolates.add(chocolate);
+	        }
+	    }
+	    return filteredChocolates;
+	}
+	
 	private void saveAllChocolates() {
 	    BufferedWriter out = null;
 	    try {
@@ -200,5 +213,5 @@ public class ChocolateDAO {
                chocolate.getIsDeleted();
     }
 
-
+    
 }
