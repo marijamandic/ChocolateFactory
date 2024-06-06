@@ -166,4 +166,14 @@ public class FactoryDAO {
 	                     .collect(Collectors.joining(";"));
 	}
 	
+	public void setChocolatesToFactory(Collection<Chocolate> chocolates, String factoryId) {
+		Collection<Chocolate> choco = new ArrayList();
+		for(Chocolate chocolate : chocolates) {
+			if(chocolate.getFactory().getId().equals(factoryId)) {
+				choco.add(chocolate);
+			}
+		}
+		Factory factory = findFactoryById(factoryId);
+		factory.setChocolates(choco);
+	}
 }
