@@ -16,6 +16,27 @@ const routes = [
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
   },
+    {
+    path: "/add-chocolate",
+    name: "add-chocolate",
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () =>
+      import(/* webpackChunkName: "about" */ "../views/AddChocolate.vue"),
+  },
+  {
+    path: '/factoryInfo/:id', // Dodajemo dinamički segment za ID fabrike
+    name: 'FactoryInfo',
+    component: () =>
+      import(/* webpackChunkName: "about" */ "../views/FactoryInfo.vue"),
+  },
+  {
+    path: '/chocolates', // Dodajemo dinamički segment za ID fabrike
+    name: 'Chocolates',
+    // component: () =>
+    //   import(/* webpackChunkName: "about" */ "../views/FactoryInfo.vue"),
+  },
 ];
 
 const router = createRouter({

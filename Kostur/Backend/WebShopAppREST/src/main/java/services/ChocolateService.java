@@ -1,8 +1,11 @@
 package services;
 
+import java.util.Collection;
+
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -15,7 +18,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import beans.Chocolate;
+import beans.Factory;
 import dao.ChocolateDAO;
+import dao.FactoryDAO;
 
 @Path("/chocolates")
 public class ChocolateService {
@@ -36,6 +41,13 @@ public class ChocolateService {
 	}
 	
 	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Collection<Chocolate> getAllChocolates() {
+		ChocolateDAO dao = (ChocolateDAO) ctx.getAttribute("chocolateDAO");
+		return dao.findAll();
+	}
+	
+	@GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Chocolate getChocolateById(@PathParam("id") String id) {
@@ -47,6 +59,7 @@ public class ChocolateService {
         return null;
     }
 	
+	/*
 	@POST
 	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -55,7 +68,20 @@ public class ChocolateService {
 	        //chocolate.setFactory(.getChocolateFactory());
 	        dao.addChocolate(chocolate);
 	        return Response.ok().build();
+	}*/
+	
+	@POST
+	@Path("/")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response addChocolate(Chocolate chocolate) { 
+	    ChocolateDAO dao = (ChocolateDAO) ctx.getAttribute("chocolateDAO");
+	    System.out.println("Received chocolate: " + chocolate.getName());
+	    Chocolate addedChocolate = dao.addChocolate(chocolate);
+	    System.out.println("Added chocolate: " + addedChocolate.getName());
+	    return Response.ok(addedChocolate).build();
 	}
+
 	
 	@PUT
 	@Path("/{id}")

@@ -92,21 +92,22 @@ public class ChocolateDAO {
 	}
 	
 	public Chocolate addChocolate(Chocolate chocolate) {
-		Integer maxId = -1;
-		for (String id : chocolates.keySet()) {
-			int idNum = Integer.parseInt(id);
-			if (idNum > maxId) {
-				maxId = idNum;
-			}
-		}
-		maxId++;
-		chocolate.setId(maxId.toString());
-		chocolates.put(chocolate.getId(), chocolate);
-		factoryDAO.addChocolateToFactory(chocolate.getFactory().getId(), chocolate);
-        saveAllChocolates();
-		return chocolate;
+	    Integer maxId = -1;
+	    for (String id : chocolates.keySet()) {
+	        int idNum = Integer.parseInt(id);
+	        if (idNum > maxId) {
+	            maxId = idNum;
+	        }
+	    }
+	    maxId++;
+	    chocolate.setId(maxId.toString());
+	    chocolates.put(chocolate.getId(), chocolate);
+	    System.out.println("Added chocolate: " + chocolate.getId() + ", " + chocolate.getName());
+	    factoryDAO.addChocolateToFactory(chocolate.getFactory().getId(), chocolate);
+	    saveAllChocolates();
+	    return chocolate;
 	}
-	
+
 	public Chocolate updateChocolate(String id, Chocolate chocolate) {
 		Chocolate c = findChocolateById(id);
 		if (c == null) {
@@ -135,7 +136,7 @@ public class ChocolateDAO {
         }
         return chocolate;
 	}
-	
+/*	
 	private void saveAllChocolates() {
         BufferedWriter out = null;
         try {
@@ -158,7 +159,32 @@ public class ChocolateDAO {
             }
         }
     }
+*/
+	
+	private void saveAllChocolates() {
+	    BufferedWriter out = null;
+	    try {
+	        File file = new File(contextPath + "/chocolates.txt");
+	        out = new BufferedWriter(new FileWriter(file));
+	        for (Chocolate chocolate : chocolates.values()) {
+	            out.write(chocolateToFileFormat(chocolate));
+	            out.newLine();
+	            System.out.println("Saved chocolate: " + chocolate.getId() + ", " + chocolate.getName());
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    } finally {
+	        if (out != null) {
+	            try {
+	                out.close();
+	            } catch (IOException e) {
+	                e.printStackTrace();
+	            }
+	        }
+	    }
+	}
 
+	
     private String chocolateToFileFormat(Chocolate chocolate) {
         return chocolate.getId() + ";" +
                chocolate.getName() + ";" +

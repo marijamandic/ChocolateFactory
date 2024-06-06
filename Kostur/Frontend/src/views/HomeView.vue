@@ -55,10 +55,15 @@ function fetchFactories() {
 
 function goToFactoryInfo(factory){
         this.error = factory.id;
-       router.push({path: '/factoryInfo', query: {id:factory.id}});
+  //  router.push({path: '/factoryInfo', query: {id:factory.id}});
+      router.push({ path: `/factoryInfo/${factory.id}` });
    }
 
    const getFactoryImagePath = (imageName) => `/assets/FactoryLogos/${imageName}`;
+
+function showFactory(index) {
+  
+}
 
 </script>
 
