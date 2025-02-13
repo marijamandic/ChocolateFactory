@@ -1,0 +1,11 @@
+id,customerId,factoryId,text,rating
+0,jane,0,Great factory with delicious chocolates,5
+1,john,1,Average experience, could be better,3
+2,max,2,Excellent tour and great products,4
+3,jane,3,Not bad, but a bit overpriced,3
+4,john,4,Loved the visit, will come again,5
+5,max,0,Nice place but very crowded,4
+6,jane,1,Fantastic variety of chocolates,5
+7,john,2,Good but lacks some organization,3
+8,max,3,Amazing chocolates and friendly staff,5
+9,jane,4,Decent place, nothing extraordinary,3

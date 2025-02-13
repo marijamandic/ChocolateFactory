@@ -42,7 +42,7 @@ public class FactoryService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Collection<Factory> getAllFactories() {
 		FactoryDAO dao = (FactoryDAO) ctx.getAttribute("factoryDAO");
-		return dao.getFilteredFactories();
+		return dao.findAll();
 	}
 	
 	@GET

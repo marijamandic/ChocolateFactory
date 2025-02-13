@@ -3,6 +3,7 @@ package dao;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -21,37 +22,32 @@ public class CommentDAO {
 	}
 	
 	private void loadComments(String contextPath) {
-		BufferedReader in = null;
-		try {
-			File file = new File(contextPath + "/comments.txt");
-			in = new BufferedReader(new FileReader(file));
-			String line;
-			StringTokenizer st;
-			while ((line = in.readLine()) != null) {
-				line = line.trim();
-				if (line.equals("") || line.indexOf('#') == 0)
-					continue;
-				st = new StringTokenizer(line, ";");
-				while (st.hasMoreTokens()) {
-					String id = st.nextToken().trim();
-					String customerId = st.nextToken().trim();
-	                String factoryId = st.nextToken().trim();
-	                String text = st.nextToken().trim();
-	                int rating = Integer.parseInt(st.nextToken().trim());
-	                comments.put(id, new Comment(id, customerId, factoryId, text, rating));
-				}
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				}
-				catch (Exception e) { }
-			}
-		}
-	}
+        try (BufferedReader in = new BufferedReader(new FileReader(new File(contextPath + "/comments.csv")))) {
+            String line;
+            in.readLine();
+
+            while ((line = in.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("#")) 
+                    continue;
+
+                String[] tokens = line.split(",");
+                if (tokens.length == 5) {
+                    String id = tokens[0].trim();
+                    String customerId = tokens[1].trim();
+                    String factoryId = tokens[2].trim();
+                    String text = tokens[3].trim();
+                    int rating = Integer.parseInt(tokens[4].trim());
+
+                    comments.put(id, new Comment(id, customerId, factoryId, text, rating));
+                } else {
+                    System.err.println("Invalid comment entry: " + line);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 	
 	public Collection<Comment> findCommentsByFactoryId(String factoryId) {
 		Collection<Comment> commentsFactory = new ArrayList<>();

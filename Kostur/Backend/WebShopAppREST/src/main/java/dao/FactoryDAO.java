@@ -37,70 +37,73 @@ public class FactoryDAO {
 	}
 	
 	private void loadFactories(String contextPath) {
-		BufferedReader in = null;
-		try {
-			File file = new File(contextPath + "/factories.txt");
-			in = new BufferedReader(new FileReader(file));
-			String line;
-			StringTokenizer st;
-			while ((line = in.readLine()) != null) {
-				line = line.trim();
-				if (line.equals("") || line.indexOf('#') == 0)
-					continue;
-				st = new StringTokenizer(line, ";");
-				while (st.hasMoreTokens()) {
-					String id = st.nextToken().trim();
-				    String name = st.nextToken().trim();
-				    LocalTime openTime = LocalTime.parse(st.nextToken().trim()); 
-				    LocalTime closeTime = LocalTime.parse(st.nextToken().trim());
-				    
-				    String locationId = st.nextToken().trim();
-	                Location location = locationDAO.findLocationById(locationId);
+	    File file = new File(contextPath + "/factories.csv");
 
-				    String logo = st.nextToken().trim();
+	    try (BufferedReader in = new BufferedReader(new FileReader(file))) {
+	        in.readLine();	//preskakanje zaglavlja
+	    	String line;
+	        while ((line = in.readLine()) != null) {
+	            line = line.trim();
+	            if (line.isEmpty() || line.startsWith("#")) 
+	                continue;
 
-				    Collection<Chocolate> chocolates = new ArrayList<>();
-				    while (st.hasMoreTokens()) {
-	                    String chocolateId = st.nextToken().trim();
-	                    chocolates.add(chocolateDAO.findChocolateById(chocolateId));
+	            String[] parts = line.split(",");
+	            if (parts.length < 6) {
+	                System.err.println("Invalid factory entry: " + line);
+	                continue;
+	            }
+
+	            String id = parts[0].trim();
+	            String name = parts[1].trim();
+	            LocalTime openTime = LocalTime.parse(parts[2].trim());
+	            LocalTime closeTime = LocalTime.parse(parts[3].trim());
+	            String locationId = parts[4].trim();
+	            Location location = locationDAO.findLocationById(locationId);
+
+	            if (location == null) {
+	                System.err.println("Location not found for ID: " + locationId);
+	                continue;
+	            }
+
+	            String logo = parts[5].trim();
+	            
+	            String[] chocolateIds = parts.length > 6 ? parts[6].split(";") : new String[0];
+	            Collection<Chocolate> chocolates = new ArrayList<>();
+
+	            for (String chocolateId : chocolateIds) {
+	            	chocolateId = chocolateId.trim();
+	                Chocolate chocolate = chocolateDAO.findChocolateById(chocolateId);
+	                if (chocolate != null) {
+	                    chocolates.add(chocolate);
+	                } else {
+	                    System.err.println("Chocolate not found for ID: " + chocolateId);
 	                }
+	            }
 
-	                LocalTime now = LocalTime.now();
-	                boolean isOpen = now.isAfter(openTime) && now.isBefore(closeTime);
-	                double rating = commentDAO.calculateAverageRating(id);
-				    factories.put(id, new Factory(id, name, chocolates, openTime, closeTime, isOpen, location, logo, rating));
-				}
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				}
-				catch (Exception e) { }
-			}
-		}
-	}
-	
-	public Collection<Factory> getFilteredFactories() {
-		Collection<Factory> filteredFactories = new ArrayList<>();
-	    
-	    for (Factory factory : factories.values()) {
-	        if (factory.isOpen()) {
-	        	filteredFactories.add(factory);
+	            LocalTime now = LocalTime.now();
+	            boolean isOpen = now.isAfter(openTime) && now.isBefore(closeTime);
+	            double rating = commentDAO.calculateAverageRating(id);
+
+	            factories.put(id, new Factory(id, name, chocolates, openTime, closeTime, isOpen, location, logo, rating));
 	        }
+	    } catch (Exception ex) {
+	        ex.printStackTrace();
 	    }
-	    
-	    for (Factory factory : factories.values()) {
-	        if (!factory.isOpen()) {
-	        	filteredFactories.add(factory);
-	        }
-	    }
-	    
-	    return filteredFactories;
 	}
+
 	
+	/*
+	 * public Collection<Factory> getFilteredFactories() { Collection<Factory>
+	 * filteredFactories = new ArrayList<>();
+	 * 
+	 * for (Factory factory : factories.values()) { if (factory.isOpen()) {
+	 * filteredFactories.add(factory); } }
+	 * 
+	 * for (Factory factory : factories.values()) { if (!factory.isOpen()) {
+	 * filteredFactories.add(factory); } }
+	 * 
+	 * return filteredFactories; }
+	 */	
 	public Collection<Factory> getOpenFactories() {
 	    return factories.values().stream()
 	            .filter(Factory::isOpen)
@@ -117,63 +120,56 @@ public class FactoryDAO {
 	
 	public Factory addChocolateToFactory(String factoryId, Chocolate chocolate) {
 		Factory factory = findFactoryById(factoryId);
-		Collection<Chocolate> chocolates = factory.getChocolates();
-		chocolates.add(chocolate);
-		factory.setChocolates(chocolates);
-        saveAllFactories();
-		return factory;
+	    if (factory == null) {
+	        System.err.println("Factory not found for ID: " + factoryId);
+	        return null;
+	    }
+	    factory.getChocolates().add(chocolate);
+	    saveAllFactories();
+	    return factory;
 	}
 	
 	private void saveAllFactories() {
-        BufferedWriter out = null;
-        try {
-            File file = new File(contextPath + "/factories.txt");
-            out = new BufferedWriter(new FileWriter(file));
+	    File file = new File(contextPath + "/factories.csv");
+	    try (BufferedWriter out = new BufferedWriter(new FileWriter(file, true))) { 
+	        if (file.length() == 0) {
+	            out.write("id,name,openTime,closeTime,locationId,logo,chocolatesId");
+	            out.newLine();
+	        }
 
-            for (Factory factory : factories.values()) {
-                out.write(factoryToFileFormat(factory));
-                out.newLine();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+	        for (Factory factory : factories.values()) {
+	            out.write(factoryToFileFormat(factory));
+	            out.newLine();
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	}
+
+
 
 	private String factoryToFileFormat(Factory factory) {
-	    return factory.getId() + ";" +
-	           factory.getName() + ";" +
-	           factory.getOpenTime() + ";" +
-	           factory.getCloseTime() + ";" +
-	           factory.getLocation().getId() + ";" +
-	           factory.getLogo() + ";" +
+	    return factory.getId() + "," +
+	           factory.getName() + "," +
+	           factory.getOpenTime() + "," +
+	           factory.getCloseTime() + "," +
+	           factory.getLocation().getId() + "," +
+	           factory.getLogo() + "," +
 	           chocolatesToFileFormat(factory.getChocolates());
 	}
 	
 	private String chocolatesToFileFormat(Collection<Chocolate> chocolates) {
-	    if (chocolates == null || chocolates.isEmpty()) {
-	        return "null";
-	    }
-	    return chocolates.stream()
-	                     .map(Chocolate::getId)
-	                     .collect(Collectors.joining(";"));
+		return chocolates.isEmpty() ? "" : chocolates.stream()
+		        .map(Chocolate::getId)
+		        .collect(Collectors.joining(";"));
 	}
 	
-	public void setChocolatesToFactory(Collection<Chocolate> chocolates, String factoryId) {
-		Collection<Chocolate> choco = new ArrayList();
-		for(Chocolate chocolate : chocolates) {
-			if(chocolate.getFactory().getId().equals(factoryId)) {
-				choco.add(chocolate);
-			}
-		}
-		Factory factory = findFactoryById(factoryId);
-		factory.setChocolates(choco);
-	}
+	/*
+	 * public void setChocolatesToFactory(Collection<Chocolate> chocolates, String
+	 * factoryId) { Collection<Chocolate> choco = new ArrayList(); for(Chocolate
+	 * chocolate : chocolates) {
+	 * if(chocolate.getFactory().getId().equals(factoryId)) { choco.add(chocolate);
+	 * } } Factory factory = findFactoryById(factoryId);
+	 * factory.setChocolates(choco); }
+	 */
 }
