@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,80 +19,74 @@ import beans.Chocolate;
 import beans.Factory;
 import beans.Location;
 
-
 public class FactoryDAO {
 	private Map<String, Factory> factories = new HashMap<>();
 	private LocationDAO locationDAO;
-	private ChocolateDAO chocolateDAO;
 	private CommentDAO commentDAO;
 	private String contextPath;
-	
-	public FactoryDAO() {}
-	
+
+	public FactoryDAO() {
+	}
+
 	public FactoryDAO(String contextPath) {
 		this.contextPath = contextPath;
 		locationDAO = new LocationDAO(contextPath);
-		chocolateDAO = new ChocolateDAO(contextPath, this);
 		commentDAO = new CommentDAO(contextPath);
 		loadFactories(contextPath);
 	}
-	
+
 	private void loadFactories(String contextPath) {
-	    File file = new File(contextPath + "/factories.csv");
+		String filePath = contextPath + "factories.csv";
+		File file = new File(filePath);
 
-	    try (BufferedReader in = new BufferedReader(new FileReader(file))) {
-	        in.readLine();	//preskakanje zaglavlja
-	    	String line;
-	        while ((line = in.readLine()) != null) {
-	            line = line.trim();
-	            if (line.isEmpty() || line.startsWith("#")) 
-	                continue;
+		if (!file.exists()) {
+			System.err.println("ERROR: factories.csv file not found at " + filePath);
+			return;
+		} else {
+			System.out.println("Loading factories from: " + filePath);
+		}
 
-	            String[] parts = line.split(",");
-	            if (parts.length < 6) {
-	                System.err.println("Invalid factory entry: " + line);
-	                continue;
-	            }
+		try (BufferedReader in = new BufferedReader(new FileReader(file))) {
+			in.readLine(); // preskakanje zaglavlja
+			String line;
+			while ((line = in.readLine()) != null) {
+				line = line.trim();
+				if (line.isEmpty() || line.startsWith("#"))
+					continue;
 
-	            String id = parts[0].trim();
-	            String name = parts[1].trim();
-	            LocalTime openTime = LocalTime.parse(parts[2].trim());
-	            LocalTime closeTime = LocalTime.parse(parts[3].trim());
-	            String locationId = parts[4].trim();
-	            Location location = locationDAO.findLocationById(locationId);
+				String[] parts = line.split(",");
+				if (parts.length < 6) {
+					System.err.println("Invalid factory entry: " + line);
+					continue;
+				}
 
-	            if (location == null) {
-	                System.err.println("Location not found for ID: " + locationId);
-	                continue;
-	            }
+				String id = parts[0].trim();
+				String name = parts[1].trim();
+				LocalTime openTime = LocalTime.parse(parts[2].trim());
+				LocalTime closeTime = LocalTime.parse(parts[3].trim());
+				String locationId = parts[4].trim();
+				Location location = locationDAO.findLocationById(locationId);
 
-	            String logo = parts[5].trim();
-	            
-	            String[] chocolateIds = parts.length > 6 ? parts[6].split(";") : new String[0];
-	            Collection<Chocolate> chocolates = new ArrayList<>();
+				if (location == null) {
+					System.err.println("Location not found for ID: " + locationId);
+					continue;
+				}
 
-	            for (String chocolateId : chocolateIds) {
-	            	chocolateId = chocolateId.trim();
-	                Chocolate chocolate = chocolateDAO.findChocolateById(chocolateId);
-	                if (chocolate != null) {
-	                    chocolates.add(chocolate);
-	                } else {
-	                    System.err.println("Chocolate not found for ID: " + chocolateId);
-	                }
-	            }
+				String logo = parts[5].trim();
 
-	            LocalTime now = LocalTime.now();
-	            boolean isOpen = now.isAfter(openTime) && now.isBefore(closeTime);
-	            double rating = commentDAO.calculateAverageRating(id);
+				LocalTime now = LocalTime.now();
+				boolean isOpen = now.isAfter(openTime) && now.isBefore(closeTime);
+				double rating = commentDAO.calculateAverageRating(id);
 
-	            factories.put(id, new Factory(id, name, chocolates, openTime, closeTime, isOpen, location, logo, rating));
-	        }
-	    } catch (Exception ex) {
-	        ex.printStackTrace();
-	    }
+				factories.put(id,
+						new Factory(id, name, openTime, closeTime, isOpen, location, logo, rating));
+				System.out.println("Factory ID " + id + " added to map.");
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 
-	
 	/*
 	 * public Collection<Factory> getFilteredFactories() { Collection<Factory>
 	 * filteredFactories = new ArrayList<>();
@@ -103,67 +98,45 @@ public class FactoryDAO {
 	 * filteredFactories.add(factory); } }
 	 * 
 	 * return filteredFactories; }
-	 */	
+	 */
 	public Collection<Factory> getOpenFactories() {
-	    return factories.values().stream()
-	            .filter(Factory::isOpen)
-	            .collect(Collectors.toList());
+		return factories.values().stream().filter(Factory::isOpen).collect(Collectors.toList());
 	}
 
 	public Collection<Factory> findAll() {
 		return factories.values();
 	}
+
 	
 	public Factory findFactoryById(String id) {
-		return factories.get(id);
+		System.out.println("Looking for factory with ID: " + id); Factory factory =
+		factories.get(id); if (factory == null) {
+		System.out.println("Factory with ID " + id +
+		" not found in the factories map."); } return factory; 
 	}
-	
-	public Factory addChocolateToFactory(String factoryId, Chocolate chocolate) {
-		Factory factory = findFactoryById(factoryId);
-	    if (factory == null) {
-	        System.err.println("Factory not found for ID: " + factoryId);
-	        return null;
-	    }
-	    factory.getChocolates().add(chocolate);
-	    saveAllFactories();
-	    return factory;
-	}
-	
+
 	private void saveAllFactories() {
-	    File file = new File(contextPath + "/factories.csv");
-	    try (BufferedWriter out = new BufferedWriter(new FileWriter(file, true))) { 
-	        if (file.length() == 0) {
-	            out.write("id,name,openTime,closeTime,locationId,logo,chocolatesId");
-	            out.newLine();
-	        }
+		File file = new File(contextPath + "/factories.csv");
+		try (BufferedWriter out = new BufferedWriter(new FileWriter(file, true))) {
+			if (file.length() == 0) {
+				out.write("id,name,openTime,closeTime,locationId,logo");
+				out.newLine();
+			}
 
-	        for (Factory factory : factories.values()) {
-	            out.write(factoryToFileFormat(factory));
-	            out.newLine();
-	        }
-	    } catch (IOException e) {
-	        e.printStackTrace();
-	    }
+			for (Factory factory : factories.values()) {
+				out.write(factoryToFileFormat(factory));
+				out.newLine();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
-
-
 
 	private String factoryToFileFormat(Factory factory) {
-	    return factory.getId() + "," +
-	           factory.getName() + "," +
-	           factory.getOpenTime() + "," +
-	           factory.getCloseTime() + "," +
-	           factory.getLocation().getId() + "," +
-	           factory.getLogo() + "," +
-	           chocolatesToFileFormat(factory.getChocolates());
+		return factory.getId() + "," + factory.getName() + "," + factory.getOpenTime() + "," + factory.getCloseTime()
+				+ "," + factory.getLocation().getId() + "," + factory.getLogo();
 	}
-	
-	private String chocolatesToFileFormat(Collection<Chocolate> chocolates) {
-		return chocolates.isEmpty() ? "" : chocolates.stream()
-		        .map(Chocolate::getId)
-		        .collect(Collectors.joining(";"));
-	}
-	
+
 	/*
 	 * public void setChocolatesToFactory(Collection<Chocolate> chocolates, String
 	 * factoryId) { Collection<Chocolate> choco = new ArrayList(); for(Chocolate

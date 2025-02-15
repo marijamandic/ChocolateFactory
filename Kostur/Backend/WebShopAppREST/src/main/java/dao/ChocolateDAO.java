@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,24 +25,29 @@ public class ChocolateDAO {
 	private FactoryDAO factoryDAO;
 	private String contextPath;
 	
-	public ChocolateDAO() {}
+	public ChocolateDAO() {
+		this.factoryDAO = new FactoryDAO();
+	}
 	
 	public ChocolateDAO(String contextPath) {
 		this.contextPath = contextPath;
-		factoryDAO = new FactoryDAO(contextPath);
+		this.factoryDAO = new FactoryDAO(contextPath);
 		loadChocolates(contextPath);
 	}
+	
 	public ChocolateDAO(String contextPath, FactoryDAO factoryDAO) {
 		this.contextPath = contextPath;
-	    this.factoryDAO = (factoryDAO != null) ? factoryDAO : new FactoryDAO(contextPath);  // Provera null vrednosti
+	    this.factoryDAO = (factoryDAO != null) ? factoryDAO : new FactoryDAO(contextPath);
 	    loadChocolates(contextPath);
 	}
 	
 	public Chocolate findChocolateById(String id) {
 	    Chocolate chocolate = chocolates.get(id);
-	    return (chocolate != null && !chocolate.getIsDeleted()) ? chocolate : null;
+	    if (chocolate == null) {
+	        System.out.println("Chocolate with ID " + id + " not found in the chocolates map.");
+	    }
+	    return chocolate;
 	}
-
 
 	public Collection<Chocolate> findAll() {
 	    return chocolates.values().stream()
@@ -49,19 +55,36 @@ public class ChocolateDAO {
 	                      .collect(Collectors.toList());
 	}
 
+	public Collection<Chocolate> findByFactory(String id) {
+	    return chocolates.values().stream()
+	                      .filter(chocolate -> (!chocolate.getIsDeleted() && chocolate.getFactory().getId().equals(id)))
+	                      .collect(Collectors.toList());
+	}
 	
     private void loadChocolates(String contextPath) {
-        try (BufferedReader in = new BufferedReader(new FileReader(new File(contextPath + "/chocolates.csv")))) {
+    	String filePath = contextPath + "chocolates.csv";
+        File file = new File(filePath);
+
+        if (!file.exists()) {
+            System.err.println("ERROR: chocolates.csv file not found at " + filePath);
+            return;
+        } else {
+            System.out.println("Loading chocolates from: " + filePath);
+        }
+        
+        try (BufferedReader in = new BufferedReader(new FileReader(file))) {
             in.readLine();	// presakaknje zaglavlja
 
             String line;
             while ((line = in.readLine()) != null) {
+            	System.out.println("Reading chocolate line: " + line);
+                
                 line = line.trim();
                 if (line.isEmpty() || line.startsWith("#"))
                     continue;
 
                 String[] parts = line.split(",");
-                if (parts.length < 11) {
+                if (parts.length < 12) {
                     System.err.println("Invalid chocolate entry: " + line);
                     continue;
                 }
@@ -73,11 +96,6 @@ public class ChocolateDAO {
                 String factoryId = parts[4].trim();
                 Factory factory = factoryDAO.findFactoryById(factoryId);
 
-                if (factory == null) {
-                    System.err.println("Factory not found for ID: " + factoryId);
-                    continue;
-                }
-
                 Kind kind = Kind.valueOf(parts[5].trim());
                 int weight = Integer.parseInt(parts[6].trim());
                 String description = parts[7].trim();
@@ -86,7 +104,11 @@ public class ChocolateDAO {
                 int quantity = Integer.parseInt(parts[10].trim());
                 boolean isDeleted = Boolean.parseBoolean(parts[11].trim());
 
-                chocolates.put(id, new Chocolate(id, name, price, type, factory, kind, weight, description, image, inStock, quantity, isDeleted));
+                if (factory != null) {
+                    chocolates.put(id, new Chocolate(id, name, price, type, factory, kind, weight, description, image, inStock, quantity, isDeleted));
+                } else {
+                    System.err.println("Factory with ID " + factoryId + " not found for chocolate " + id);
+                }
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -94,6 +116,7 @@ public class ChocolateDAO {
     }
 
 	
+    
     public Chocolate addChocolate(Chocolate chocolate) {
         Set<Integer> existingIds = chocolates.keySet().stream()
                 .map(Integer::parseInt)  // pretvori ID-jeve u brojeve
@@ -108,7 +131,6 @@ public class ChocolateDAO {
         chocolate.setId(String.valueOf(maxId));
         chocolates.put(chocolate.getId(), chocolate);
         System.out.println("Added chocolate: " + chocolate.getId() + ", " + chocolate.getName());
-        factoryDAO.addChocolateToFactory(chocolate.getFactory().getId(), chocolate);
         saveAllChocolates();
         return chocolate;
     }
@@ -176,7 +198,7 @@ public class ChocolateDAO {
 	
 	private void saveAllChocolates() {
 		try (BufferedWriter out = new BufferedWriter(new FileWriter(contextPath + "/chocolates.csv", true))) {
-			File file = new File(contextPath + "/chocolates.csv");
+			File file = new File(contextPath + "chocolates.csv");
 			
 			if (file.length() == 0) {
 	            out.write("id,name,price,type,factoryId,kind,weight,description,image,inStock,quantity,isDeleted");

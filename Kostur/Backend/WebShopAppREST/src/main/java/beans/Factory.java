@@ -16,12 +16,11 @@ public class Factory {
 	
 	public Factory() {
 	}
-	public Factory(String id, String name, Collection<Chocolate> chocolates, LocalTime openTime, LocalTime closeTime,
+	public Factory(String id, String name, LocalTime openTime, LocalTime closeTime,
 			boolean isOpen, Location location, String logo, double rating) {
 		super();
 		this.id = id;
 		this.name = name;
-		this.chocolates = chocolates;
 		this.openTime = openTime;
 		this.closeTime = closeTime;
 		this.isOpen = isOpen;

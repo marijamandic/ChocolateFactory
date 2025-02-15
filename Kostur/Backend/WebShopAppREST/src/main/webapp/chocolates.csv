@@ -4,3 +4,15 @@ id,name,price,type,factoryId,kind,weight,description,image,inStock,quantity,isDe
 2,White Chocolate,2.7,ORDINARY,0,WHITE,90,Smooth white chocolate,White_Chocolate.jpg,true,40,false
 3,Hazelnut Chocolate,3.5,FOR_DRINKING,1,FLAVORED,120,Delicious hazelnut chocolate,Dark_Chocolate.jpg,true,60,false
 4,Almond Chocolate,3.2,GIFT,1,FLAVORED,2,Crunchy almond chocolate,Milk_Chocolate.jpg,true,55,false
+5,Caramel Chocolate,3.8,ORDINARY,2,FLAVORED,110,Sweet caramel-filled chocolate,Caramel_Chocolate.jpg,true,45,false
+6,Bitter Chocolate,4.0,FOR_COOKING,3,DARK,70,Extra bitter chocolate for baking,Bitter_Chocolate.jpg,true,25,false
+7,Coconut Chocolate,3.6,GIFT,2,FLAVORED,95,Exotic coconut chocolate,Coconut_Chocolate.jpg,true,35,false
+8,Strawberry Chocolate,3.3,ORDINARY,4,FLAVORED,105,Fruity strawberry chocolate,Strawberry_Chocolate.jpg,true,50,false
+9,Espresso Chocolate,3.9,FOR_DRINKING,3,DARK,90,Strong espresso-infused chocolate,Espresso_Chocolate.jpg,true,40,false
+10,Orange Chocolate,3.4,ORDINARY,4,FLAVORED,115,Zesty orange-flavored chocolate,Orange_Chocolate.jpg,true,55,false
+11,Chili Chocolate,3.7,FOR_COOKING,1,DARK,85,Spicy chocolate with chili,Chili_Chocolate.jpg,true,30,false
+12,Vanilla White Chocolate,3.2,GIFT,0,WHITE,100,White chocolate with vanilla essence,Vanilla_Chocolate.jpg,true,45,false
+13,Raspberry Chocolate,3.5,FOR_DRINKING,2,FLAVORED,110,Tangy raspberry-infused chocolate,Raspberry_Chocolate.jpg,true,50,false
+14,Peanut Butter Chocolate,3.6,ORDINARY,3,FLAVORED,125,Creamy peanut butter chocolate,PeanutButter_Chocolate.jpg,true,60,false
+15,Matcha White Chocolate,4.1,FOR_DRINKING,0,WHITE,95,White chocolate infused with matcha,Matcha_Chocolate.jpg,true,35,false
+16,Sea Salt Dark Chocolate,3.8,FOR_COOKING,4,DARK,80,Dark chocolate with sea salt,SeaSalt_Chocolate.jpg,true,40,false
