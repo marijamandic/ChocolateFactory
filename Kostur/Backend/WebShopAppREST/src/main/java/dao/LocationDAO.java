@@ -23,36 +23,37 @@ public class LocationDAO {
 	}
 	
 	private void loadLocations(String contextPath) {
-		BufferedReader in = null;
-		try {
-			File file = new File(contextPath + "/locations.txt");
-			in = new BufferedReader(new FileReader(file));
-			String line;
-			StringTokenizer st;
-			while ((line = in.readLine()) != null) {
-				line = line.trim();
-				if (line.equals("") || line.indexOf('#') == 0)
-					continue;
-				st = new StringTokenizer(line, ";");
-				while (st.hasMoreTokens()) {
-					String id = st.nextToken().trim();
-				    double longitude = Double.parseDouble(st.nextToken().trim());
-				    double latitude = Double.parseDouble(st.nextToken().trim());
-				    String address = st.nextToken().trim();
-				    
-				    locations.put(id, new Location(id, longitude, latitude, address));
-				}
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				}
-				catch (Exception e) { }
-			}
-		}
+	    try (BufferedReader in = new BufferedReader(new FileReader(new File(contextPath + "/locations.csv")))) {
+	        String line;
+	        if ((line = in.readLine()) != null) {
+	            line = line.trim();
+	            if (line.startsWith("#")) {
+	                return;
+	            }
+	        }
+
+	        while ((line = in.readLine()) != null) {
+	            line = line.trim();
+	            if (line.isEmpty() || line.startsWith("#"))
+	                continue;
+
+	            String[] parts = line.split(",");
+	            if (parts.length < 4) {
+	                System.err.println("Invalid location entry: " + line);
+	                continue;
+	            }
+
+	            String id = parts[0].trim();
+	            double longitude = Double.parseDouble(parts[1].trim());
+	            double latitude = Double.parseDouble(parts[2].trim());
+	            String address = parts[3].trim();
+
+	            locations.put(id, new Location(id, longitude, latitude, address));
+	        }
+	    } catch (Exception ex) {
+	        ex.printStackTrace();
+	    }
 	}
+
 
 }

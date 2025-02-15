@@ -1,0 +1,6 @@
+id,name,openTime,closeTime,locationId,logo
+0,CokoFantazija,08:00,18:00,0,CokoFantazija.png
+1,SlasniSvet,09:00,17:00,1,SlasniSvet.png
+2,CocoaDelight,08:00,18:00,2,CocoaDelight.png
+3,ChocoRush,07:00,15:00,3,ChocoRush.png
+4,SweetDreams,07:00,23:00,4,SweetDreams.png

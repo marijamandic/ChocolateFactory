@@ -1,5 +1,0 @@
-0;CokoFantazija;08:00;18:00;0;CokoFantazija.png;0;1;2
-1;SlasniSvet;09:00;17:00;1;SlasniSvet.png;3;4
-2;CocoaDelight;08:00;18:00;2;CocoaDelight.png;0;1;2
-3;ChocoRush;07:00;15:00;3;ChocoRush.png;3;4
-4;SweetDreams;07:00;15:00;4;SweetDreams.png;3;4
