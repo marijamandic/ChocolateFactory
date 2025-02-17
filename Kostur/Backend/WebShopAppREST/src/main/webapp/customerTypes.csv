@@ -1,0 +1,4 @@
+id,type,discount,score
+0,GOLD,0.20,1000
+1,SILVER,0.10,500
+2,BRONZE,0.05,100

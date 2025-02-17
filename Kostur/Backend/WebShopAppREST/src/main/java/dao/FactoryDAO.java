@@ -68,7 +68,6 @@ public class FactoryDAO {
 				Location location = locationDAO.findLocationById(locationId);
 
 				if (location == null) {
-					System.err.println("Location not found for ID: " + locationId);
 					continue;
 				}
 
@@ -80,7 +79,6 @@ public class FactoryDAO {
 
 				factories.put(id,
 						new Factory(id, name, openTime, closeTime, isOpen, location, logo, rating));
-				System.out.println("Factory ID " + id + " added to map.");
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -109,10 +107,10 @@ public class FactoryDAO {
 
 	
 	public Factory findFactoryById(String id) {
-		System.out.println("Looking for factory with ID: " + id); Factory factory =
-		factories.get(id); if (factory == null) {
-		System.out.println("Factory with ID " + id +
-		" not found in the factories map."); } return factory; 
+		Factory factory = factories.get(id); 
+		if (factory == null) {
+		System.out.println("Factory with ID " + id + " not found in the factories map."); 
+		} return factory; 
 	}
 
 	private void saveAllFactories() {
