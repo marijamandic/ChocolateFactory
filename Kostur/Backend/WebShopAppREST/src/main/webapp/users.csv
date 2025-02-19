@@ -14,3 +14,5 @@ id,korisnicko ime,lozinka,ime,prezime,pol,datum rodjenja,uloga,fabrika,broj bodo
 12,djordje_n,djordje_pass,Djordje,Nikolić,MALE,1988-05-10,MANAGER,3,-1,-1,-1
 13,marijaaaa,pass123,Marija,Mandic,FEMALE,2002-07-31,CUSTOMER,-1,250.0,1
 14,user,123,Ilija,Petrovic,MALE,2002-02-12,CUSTOMER,-1,0.0,2
+15,menadzeeeer,123,Anja,Jovanovic,FEMALE,2002-02-13,MANAGER,4,-1,-1
+16,radniiiiik,123,Ivica,Nikolic,MALE,2002-02-11,WORKER,-1,-1,-1

@@ -1,5 +1,7 @@
 package beans;
 
+import beans.enums.Role;
+
 public class LoginRequest {
     private String username;
     private String password;
@@ -26,4 +28,5 @@ public class LoginRequest {
     public void setPassword(String password) {
         this.password = password;
     }
+
 }

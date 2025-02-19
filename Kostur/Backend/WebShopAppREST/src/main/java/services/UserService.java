@@ -19,6 +19,7 @@ import beans.Chocolate;
 import beans.LoginRequest;
 import beans.LoginResponse;
 import beans.User;
+import beans.enums.Role;
 import dao.ChocolateDAO;
 import dao.UserDAO;
 
@@ -52,6 +53,18 @@ public class UserService{
     public User getUserById(@PathParam("id") String id) {
 		UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");
 		User user = dao.findById(id);
+        if (user != null) {
+            return user;
+        } 
+        return null;
+    }
+	
+	@GET
+    @Path("/getByUsername/{username}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public User getUserByUsername(@PathParam("username") String username) {
+		UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");
+		User user = dao.findUserByUsername(username);
         if (user != null) {
             return user;
         } 

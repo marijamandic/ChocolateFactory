@@ -1,44 +1,77 @@
 <template>
   <div>
-    <header>
-      <h1>Chocolate Factory</h1>
-    </header>
-    <nav>
-      <ul>
-        <li><router-link to="/">Home</router-link></li>
-        <li><router-link to="/add-chocolate">Ne klikci ovde</router-link></li>
-        <li><router-link to="/about">About Us</router-link></li>
-        <li><router-link to="/contact">Contact</router-link></li>
-      </ul>
-    </nav>
+
     <div class="container" v-if="factory">
       <!-- Prikaz informacija o fabrici -->
-      <img :src="getFactoryImagePath(factory.logo)" :alt="factory.alt">
       <h2>{{ factory.name }}</h2>
-      <p>Visiting Time: {{ formatTime(factory.openTime) }} - {{ formatTime(factory.closeTime) }} 
-        <span v-if="isFactoryOpen(factory.openTime, factory.closeTime)"> (Open Now)</span>
-        <span v-else> (Closed Now)</span>
-      </p>
-      <p>Location: {{ factory.location.address }}</p>
-      <p>Rating: {{ factory.rating }}</p>
+      <img :src="getFactoryImagePath(factory.logo)" :alt="factory.alt">
 
-      <h3>Chocolates:</h3>
-      <ul v-if="chocolates.length > 0" class="chocolates-list">
-        <li v-for="chocolate in chocolates" :key="chocolate.uuid" class="chocolate-item">
-          <!-- Prikaz čokolade -->
-          <div>{{ chocolate.name }}</div>
-          <button @click="deleteChocolate(chocolate.uuid)">Delete</button>
-        </li>
-      </ul>
-      <p v-else>No chocolates available.</p>
+      <table class="factory-info">
+        <tr>
+          <td class="label">Visiting Time:</td>
+          <td>{{ formatTime(factory.openTime) }} - {{ formatTime(factory.closeTime) }} 
+            <span class="opened" v-if="isFactoryOpen(factory.openTime, factory.closeTime)">OPEN</span>
+            <span class="closed" v-else>CLOSED</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="label">Location:</td>
+          <td>{{ factory.location.address }}</td>
+        </tr>
+        <tr>
+          <td class="label">Rating:</td>
+          <td>{{ factory.rating }}</td>
+        </tr>
+      </table>
+      
+      <div class="chocolates">
+        <h3>Chocolates:</h3>
+        <table v-if="chocolates.length > 0" class="table-container">
+          <table class="chocolates-table">
+            <tr>
+              <td>Name</td>
+              <td>Description</td>
+              <td>Kind</td>
+              <td>Price</td>
+              <td>Quantity</td>
+              <td>Type</td>
+            </tr>
+            <tr v-for="(chocolate, index) in chocolates" :key="chocolate.uuid" 
+                :class="{'light-row': index % 2 === 0, 'dark-row': index % 2 !== 0}">
+              <td>{{ chocolate.name }}</td>
+              <td>{{ chocolate.description }}</td>
+              <td>{{ getChocolateKind(chocolate) }}</td>
+              <td>{{ chocolate.price }}</td>
+              <td>{{ chocolate.quantity }}</td>
+              <td>{{ getChocolateType(chocolate) }}</td>
+              <td><button @click="deleteChocolate(chocolate.uuid)">Delete</button></td>
+            </tr>
+          </table>
+        </table>
+        <p v-else>No chocolates available.</p>
+      </div>
 
-      <h3>Comments:</h3>
-      <p>There is no comments yet</p>
-
+      <div class="comments">
+        <h3>Comments:</h3>
+        
+        <div v-if="comments.length > 0">
+          <div v-for="(comment, index) in comments" :key="comment.id" class="comment">
+            <p><strong>{{ comment.customerId }}:</strong> {{ comment.text }}
+              <span class="stars">
+                <span v-for="i in 5" :key="i" 
+                      :class="{'star': true, 'filled': i <= comment.rating}">
+                  ★
+                </span>
+              </span>
+            </p>
+          </div>
+        </div>
+        <p v-else>No comments yet</p>
+      </div>
       
       <!-- Ostatak informacija o fabrici -->
       <!-- Dugme za dodavanje čokolade -->
-      <button @click="goToAddChocolate">Add Chocolate</button>
+      <!-- <button @click="goToAddChocolate">Add Chocolate</button> -->
     </div>
     <div v-else>
       <p>Loading...</p>
@@ -55,11 +88,12 @@ const router = useRouter();
 const route = useRoute();
 const factory = ref(null);
 const chocolates = ref([]);
-const isDeleted = ref(false);
+const comments = ref([]);
 
 onMounted(() => {
   // Učitavanje informacija o fabrici
   fetchFactory();
+  fetchComments();
 });
 
 const getFactoryImagePath = (imageName) => `/assets/FactoryLogos/${imageName}`;
@@ -79,6 +113,18 @@ function fetchFactory() {
     });
 }
 
+function fetchComments() {
+  const factoryId = route.params.id;
+  axios.get(`http://localhost:8080/WebShopAppREST/rest/comments/${factoryId}`)
+    .then(response => {
+      comments.value = response.data;
+    })
+    .catch(error => {
+      console.error('Error loading comments:', error);
+      alert('Došlo je do greške prilikom učitavanja komentara.');
+    });
+}
+
 // Funkcija za generisanje jedinstvenog identifikatora
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -95,6 +141,48 @@ function deleteChocolate(chocolateId) {
   if (index !== -1) {
     chocolates.value.splice(index, 1); // Uklanjanje čokolade iz liste
   }
+}
+
+function getChocolateType(chocolate) {
+  let message;
+  switch (chocolate.type) {
+    case "ORDINARY":
+      message = "Ordinary";
+      break;
+    case "FOR_COOKING":
+      message = "For cooking";
+      break;
+    case "FOR_DRINKING":
+      message = "For drinking";
+      break;
+    case "GIFT":
+      message = "Gift";
+      break;
+    default:
+      message = "Unknown type";
+  }
+  return message;
+}
+
+function getChocolateKind(chocolate) {
+  let message;
+  switch (chocolate.kind) {
+    case "DARK":
+      message = "Dark";
+      break;
+    case "MILK":
+      message = "Milk";
+      break;
+    case "WHITE":
+      message = "White";
+      break;
+    case "FLAVORED":
+      message = "Flavored";
+      break;
+    default:
+      message = "Unknown kind";
+  }
+  return message;
 }
 
 function goToAddChocolate() {
@@ -119,10 +207,17 @@ function formatTime(time) {
   const [hour, minute] = time.split(':');
   return `${hour}:${minute}`;
 }
+
 </script>
 
 
 <style scoped>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -130,15 +225,28 @@ body {
 }
 
 header {
-  background-color: #333;
-  color: white;
-  padding: 10px;
+  display: flex;
+  justify-content: center; 
+  align-items: center;
+  height: 200px;
+  background-color: rgb(129, 70, 41);
+}
+
+h1 {
+  font-size: 80px;
+  font-family: 'Parisienne', cursive;
   text-align: center;
+  color: white;
+  width: 100%;
 }
 
 nav {
-  background-color: #666;
-  padding: 10px;
+  display: flex;
+  background-color: rgb(210, 160, 120);
+  height: 40px;
+  align-items: center;
+  justify-content: center; 
+
 }
 
 nav ul {
@@ -146,6 +254,7 @@ nav ul {
   padding: 0;
   margin: 0;
   text-align: center;
+  font-size: 20px;
 }
 
 nav ul li {
@@ -169,69 +278,121 @@ nav ul li a:hover {
 
 button {
   padding: 10px 20px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
+  background-color: white;
+  color: rgb(129, 70, 41);
   border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
+  border: 2px solid rgb(129, 70, 41);
 }
 
 button:hover {
-  background-color: #45a049;
+  background-color: rgb(210, 160, 120);
+  color:white;
 }
 
-.item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-  margin-left: 40px; /* Dodata margina sa leve strane */
-  margin-right: 40px; /* Dodata margina sa desne strane */
-  padding-left: 20px; /* Dodata unutrašnja margina sa leve strane */
-  padding-right: 20px; /* Dodata unutrašnja margina sa desne strane */
+h2 {
+  font-size: 60px;
+  font-family: 'Times New Roman', Times, serif;
+  text-align: center;
+  color: rgb(210, 160, 120);
+  width: 100%;
 }
 
-.item img {
-  width: 150px;
-  height: 150px; /* Povećana veličina slike */
-  margin-right: 20px;
+h3{
+  font-size: 30px;
+  font-family: 'Times New Roman', Times, serif;
+  text-align: center;
+  color: rgb(210, 160, 120);
+  width: 100%;
+  margin-bottom: 10px;
+  margin-top: 40px
 }
 
-.details {
-  flex: 1;
-}
-
-.name {
+.closed{
+  font-size:20px;
   font-weight: bold;
-  margin-bottom: 5px;
-  margin-top: 5px; /* Dodata razdaljina između naziva i ocene */
+  color:white;
+  background-color: red;
+  border-radius: 5px;
+  margin-left: 20px;
+  padding:5px;
 }
 
-.location {
-  font-style: italic;
-  color: #888;
-  margin-bottom: 5px;
-  margin-top: 5px; /* Dodata razdaljina između naziva i ocene */
-}
-
-.score {
+.opened{
+  font-size:20px;
   font-weight: bold;
+  color:white;
+  background-color: green;
+  border-radius: 5px;
+  margin-left: 20px;
+  padding: 5px;
+}
+
+.factory-info {
+  width: auto;
+  margin: auto;
+  border-collapse: collapse;
+}
+
+.factory-info tr:nth-child {
+  background-color: white;
+}
+
+.factory-info td {
+  padding: 10px;
   font-size: 20px;
-  margin-right: 10px;
-  color: #4CAF50;
-  margin-top: 5px; /* Dodata razdaljina između naziva i ocene */
 }
 
-.chocolate-item {
-  margin-bottom: 20px; /* Dodat razmak od 100 piksela ispod svake stavke čokolade */
+.label {
+  font-weight: bold;
+  text-align: left;
+  width: 40%;
 }
 
-.chocolate-details {
-  margin-right: 100px; /* Dodat razmak od 100 piksela između naziva i dugmeta */
+.table-container {
+  display: flex;
+  justify-content: center;
+  font-family: 'Open Sans', sans-serif;
 }
 
-.chocolate-details button {
-  margin-left: 100px; /* Dodat razmak od 100 piksela s leve strane dugmeta */
+.chocolates-table {
+  width: 80%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 15px;
+  overflow: hidden;
+  justify-content: center;
+}
+.chocolates-table th, .chocolates-table td {
+  padding: 8px;
+  text-align: left;
+}
+.chocolates-table th {
+  background-color: rgb(230, 200, 180);
+}
+
+.light-row {
+  background-color: rgba(210, 161, 120, 0.119);
+}
+
+.dark-row {
+  background-color: rgb(210, 160, 120);
+}
+
+.star {
+  color: #ccc;
+  font-size: 1.5em;
+  margin-right: 5px;
+}
+
+.star.filled {
+  color: #FFD700;
+}
+
+.comments{
+  font-size: 15px;
+  font-family: 'Open Sans', sans-serif;
 }
 </style>
 
