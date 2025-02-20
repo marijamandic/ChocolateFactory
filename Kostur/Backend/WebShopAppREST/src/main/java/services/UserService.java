@@ -30,29 +30,31 @@ public class UserService{
 	@Context
     HttpServletRequest request;
 	
-	public UserService() {}
+	private UserDAO userDAO;
 	
-	@PostConstruct
-	public void init() {
-		if (ctx.getAttribute("userDAO") == null) {
-	    	String contextPath = ctx.getRealPath("");
-			ctx.setAttribute("userDAO", new UserDAO(contextPath));
-		}
+	public UserService(@Context ServletContext ctx) {
+		String contextPath = ctx.getRealPath("");
+		userDAO = new UserDAO(contextPath);
 	}
+	
+	@GET
+    @Path("/init")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String initMessage() {
+        return "UserDAO initialized";
+    }
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Collection<User> getAllUsers() {
-		UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");
-		return dao.findAll();
+		return userDAO.findAll();
 	}
 	
 	@GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public User getUserById(@PathParam("id") String id) {
-		UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");
-		User user = dao.findById(id);
+		User user = userDAO.findById(id);
         if (user != null) {
             return user;
         } 
@@ -63,8 +65,7 @@ public class UserService{
     @Path("/getByUsername/{username}")
     @Produces(MediaType.APPLICATION_JSON)
     public User getUserByUsername(@PathParam("username") String username) {
-		UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");
-		User user = dao.findUserByUsername(username);
+		User user = userDAO.findUserByUsername(username);
         if (user != null) {
             return user;
         } 
@@ -76,9 +77,8 @@ public class UserService{
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response addUser(User user) {
-	    UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");
 	    System.out.println("Received user: " + user.getUsername());
-	    User addedUser = dao.addUser(user);
+	    User addedUser = userDAO.addUser(user);
 	    System.out.println("Added user: " + addedUser.getUsername());
 	    return Response.ok(addedUser).build();
 	}
@@ -88,10 +88,9 @@ public class UserService{
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response login(LoginRequest user) {
-	    UserDAO dao = (UserDAO) ctx.getAttribute("userDAO");
 	    String username = user.getUsername();
 	    String password = user.getPassword();
-	    String token = dao.authenticate(username, password);
+	    String token = userDAO.authenticate(username, password);
 
 	    if (token != null) {
 	        return Response.ok("{\"token\":\"" + token + "\"}").build();

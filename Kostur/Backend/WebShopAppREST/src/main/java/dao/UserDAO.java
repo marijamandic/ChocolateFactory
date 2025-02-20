@@ -158,8 +158,7 @@ public class UserDAO {
 	    
 	    
 	    //TODO: promeni apsolutnu putanju u relativnu
-	    String filePath = "C:\\Users\\mandi\\OneDrive\\Dokumenti\\web\\chocolate_factory\\Kostur\\Backend\\WebShopAppREST\\src\\main\\webapp\\users.csv";
-
+	    String filePath = contextPath + "users.csv";
 	    System.out.println("Writing to file: " + filePath);
 
 	    try (PrintWriter writer = new PrintWriter(new FileWriter(filePath, true))) {
