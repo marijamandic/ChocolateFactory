@@ -77,8 +77,6 @@ public class ChocolateDAO {
 
             String line;
             while ((line = in.readLine()) != null) {
-            	System.out.println("Reading chocolate line: " + line);
-                
                 line = line.trim();
                 if (line.isEmpty() || line.startsWith("#"))
                     continue;
