@@ -219,14 +219,14 @@
     padding: 10px;
     border: 1px solid rgb(129, 70, 41);
     border-radius: 8px;
-    background-color: rgb(226, 198, 150);
+    background-color: rgb(210, 160, 120);
   }
   
   .registration-form h2 {
     text-align: center;
     display: block;
     margin-bottom: 15px;
-    color: rgb(129, 70, 41);
+    color: white;
     font-weight: bold;
     font-size: 25px;
   }
@@ -238,7 +238,7 @@
   .registration-form label {
     display: block;
     margin-bottom: 5px;
-    color: rgb(129, 70, 41);
+    color: white;
     font-size: 15px;
     font-weight: bold;
   }

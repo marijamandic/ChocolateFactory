@@ -56,6 +56,7 @@
             localStorage.setItem("loggedInUser", JSON.stringify({
               username: user.value.username
             }));
+            
             router.push("/");
           }
           else {
@@ -90,7 +91,7 @@
     text-align: center;
     display: block;
     margin-bottom: 15px;
-    color: rgb(129, 70, 41);
+    color: white;
     font-weight: bold;
     font-size: 25px;
   }
@@ -102,7 +103,7 @@
   .login-form label {
     display: block;
     margin-bottom: 5px;
-    color: rgb(129, 70, 41);
+    color: white;
     font-size: 15px;
     font-weight: bold;
   }

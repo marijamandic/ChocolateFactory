@@ -49,6 +49,12 @@ const routes = [
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/Login.vue"),
   },
+  {
+    path: '/profile', // Dodajemo dinamički segment za ID fabrike
+    name: 'Profile',
+    component: () =>
+      import(/* webpackChunkName: "about" */ "../views/Profile.vue"),
+  },
 ];
 
 const router = createRouter({

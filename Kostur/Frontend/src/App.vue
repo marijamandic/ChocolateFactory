@@ -1,8 +1,4 @@
 <template>
-  <!-- <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav> -->
   <div>
     <header>
       <h1>Chocolate Factory</h1>
@@ -14,35 +10,50 @@
         <li><router-link to="/products">Products</router-link></li>
         <li><router-link to="/about">About Us</router-link></li>
         <li><router-link to="/contact">Contact</router-link></li>
-        <li><router-link to="/registration">Sign in</router-link></li>
-        <button v-if="isLoggedIn" @click="logout()">Logout</button>
-        <li v-if="isAdminLoggedIn"><router-link to="/registration">Add manager</router-link></li>
-        <li v-if="isManagerLoggedIn"><router-link to="/registration">Add worker</router-link></li>
+        <li>
+          <a href="#" @click.prevent="toggleDropdown">
+            <span class="material-icons profile-icon">account_circle</span>
+          </a>
+          <ul v-if="dropdownVisible" class="dropdown-menu">
+            <li v-if="isLoggedIn"><router-link to="/profile">See Profile</router-link></li>
+            <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
+            <li v-if="isLoggedIn"><router-link to="#" @click.prevent="logout">Logout</router-link></li>
+            <li v-if="!isLoggedIn"><router-link to="/registration">Register</router-link></li>
+            <li v-if="isAdminLoggedIn"><router-link to="/registration">Add manager</router-link></li>
+            <li v-if="isManagerLoggedIn"><router-link to="/registration">Add worker</router-link></li>
+          </ul>
+        </li>
       </ul>
     </nav>
-
-    <div v-if="!isLoggedIn" class="welcome-container">
-      <h2>Welcome to our chocolate factory!</h2><br>
-      <p>If you're already a member, please log in:</p><br>
-      <button @click="goToLogin()">Log in</button>
-    </div>
-
     <router-view/>
   </div>
 </template>
 
 <script setup>
   import axios from 'axios';
-  import { onMounted, ref, computed } from 'vue';
+  import { onMounted, ref, computed , watchEffect} from 'vue';
   import { useRouter } from 'vue-router';
 
   const router = useRouter();
-  const isLoggedIn = computed(() => !!localStorage.getItem("jwtToken"));
+ // const isLoggedIn = computed(() => !!localStorage.getItem("jwtToken"));
+ //const isLoggedIn = ref(false); 
+  const isLoggedIn = ref(!!localStorage.getItem("jwtToken"));
   const isAdminLoggedIn = ref(false); 
   const isManagerLoggedIn = ref(false);
+  const dropdownVisible = ref(false);
 
+  watchEffect(() => {
+    isLoggedIn.value = !!localStorage.getItem("jwtToken");
+  });
 
   onMounted(async () => {
+    //isLoggedIn.value = !!localStorage.getItem("jwtToken");
+    const token = localStorage.getItem("jwtToken");
+    const loggedInUser = localStorage.getItem("loggedInUser");
+
+      // Ako postoji token i korisnik u localStorage, postavljamo isLoggedIn na true
+    isLoggedIn.value = !!token && !!loggedInUser;
+    console.log("is logged in: ", isLoggedIn.value);
     isAdminLoggedIn.value = await isAdmin();
     isManagerLoggedIn.value = await isManager();
   });
@@ -111,12 +122,19 @@
     localStorage.removeItem("jwtToken");
     localStorage.removeItem("loggedInUser");
     console.log("logged in user: ", localStorage.getItem("loggedInUser"));
-   // window.location.reload();
+    isLoggedIn.value = false;  // Resetujemo vrednost
+    router.push("/");
+    //window.location.reload();
   }
 
+  function toggleDropdown(){
+    dropdownVisible.value = !dropdownVisible.value;
+  }
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Parisienne&display=swap');
+
 * {
   margin: 0;
   padding: 0;
@@ -165,6 +183,7 @@ nav ul {
 nav ul li {
   display: inline;
   margin-right: 20px;
+  position: relative;
 }
 
 nav ul li a {
@@ -201,4 +220,43 @@ button:hover {
   color:white;
 }
 
+ul.dropdown-menu {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  position: absolute; 
+  background-color: white;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  width: 150px; 
+  top: 100%; 
+  left: 0;
+}
+
+ul.dropdown-menu li {
+  padding: 5px;
+  border-bottom: none;
+}
+
+ul.dropdown-menu li:last-child {
+  border-bottom: none;
+}
+
+ul.dropdown-menu li a {
+  color: rgb(210, 160, 120);
+  text-decoration: none;
+  display: block; 
+  padding: 8px;
+}
+
+ul.dropdown-menu li a:hover {
+  background-color: rgb(210, 160, 120);
+  color: white;
+}
+
+.profile-icon {
+  font-size: 30px;
+  margin-left: auto;
+  vertical-align: middle;
+}
 </style>
