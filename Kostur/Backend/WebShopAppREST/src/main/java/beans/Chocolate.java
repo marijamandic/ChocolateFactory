@@ -15,11 +15,10 @@ public class Chocolate {
     private String image; 
     private boolean inStock; 
     private int quantity;
-    private boolean isDeleted;
     
     public Chocolate() {}
 	public Chocolate(String id, String name, double price, ChocolateType type, Factory factory, Kind kind, int weight,
-			String description, String image, boolean inStock, int quantity, boolean isDeleted) {
+			String description, String image, boolean inStock, int quantity) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -32,7 +31,6 @@ public class Chocolate {
 		this.image = image;
 		this.inStock = inStock;
 		this.quantity = quantity;
-		this.isDeleted = isDeleted;
 	}
 	public String getId() {
 		return id;
@@ -101,11 +99,4 @@ public class Chocolate {
 		this.quantity = quantity;
 	}
 
-	public boolean getIsDeleted() {
-		return isDeleted;
-	}
-	public void setIsDeleted(boolean isDeleted) {
-		this.isDeleted = isDeleted;
-	}
-    
 }

@@ -15,7 +15,7 @@
             <span class="material-icons profile-icon">account_circle</span>
           </a>
           <ul v-if="dropdownVisible" class="dropdown-menu">
-            <li v-if="isLoggedIn"><router-link to="/profile">See Profile</router-link></li>
+            <li v-if="isLoggedIn"><router-link :to="`/profile/${username}`">See Profile</router-link></li>
             <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
             <li v-if="isLoggedIn"><router-link to="#" @click.prevent="logout">Logout</router-link></li>
             <li v-if="!isLoggedIn"><router-link to="/registration">Register</router-link></li>
@@ -41,15 +41,18 @@
   const isAdminLoggedIn = ref(false); 
   const isManagerLoggedIn = ref(false);
   const dropdownVisible = ref(false);
+  const token = localStorage.getItem("jwtToken");
+  const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+  const username = loggedInUser ? loggedInUser.username : '';
 
   watchEffect(() => {
-    isLoggedIn.value = !!localStorage.getItem("jwtToken");
+    isLoggedIn.value = !!token && !!loggedInUser;
   });
+
 
   onMounted(async () => {
     //isLoggedIn.value = !!localStorage.getItem("jwtToken");
-    const token = localStorage.getItem("jwtToken");
-    const loggedInUser = localStorage.getItem("loggedInUser");
+    
 
       // Ako postoji token i korisnik u localStorage, postavljamo isLoggedIn na true
     isLoggedIn.value = !!token && !!loggedInUser;

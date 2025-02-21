@@ -156,8 +156,6 @@ public class UserDAO {
 	    users.put(user.getId(), user);
 	    System.out.println("User " + user.getUsername() + " added successfully.");
 	    
-	    
-	    //TODO: promeni apsolutnu putanju u relativnu
 	    String filePath = contextPath + "users.csv";
 	    System.out.println("Writing to file: " + filePath);
 
@@ -235,6 +233,19 @@ public class UserDAO {
 	    return user;
 	}
 
+	public String getFactoryByManager(String userId) {
+	    User user = users.values().stream()
+	                     .filter(u -> u.getId().equals(userId))
+	                     .findFirst()
+	                     .orElse(null);
+
+	    if (user == null) {
+	        System.out.println("User with id " + userId + " not found in users map.");
+	    }
+	    Factory factory = user.getFactory();
+	    
+	    return factory.getId();
+	}
 
 	public String authenticate(String username, String password) {
 	    User user = findUserByUsername(username);
