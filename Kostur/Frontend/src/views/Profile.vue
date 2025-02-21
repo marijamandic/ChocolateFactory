@@ -31,7 +31,32 @@
         </div>
       </div>
 
-      <!-- ADMIN i WORKER -->
+      <!-- ADMIN -->
+      <div class="right-column" v-if="user?.role === 'ADMIN'">
+
+      <div class="users-list">
+        <h3>Users</h3>
+        <table v-if="allUsers.length > 0" class="table-container">
+          <table class="users-table">
+            <tr>
+              <td>Username</td>
+              <td>Name</td>
+              <td>Surname</td>
+              <td>Gender</td>
+              <td>Role</td>
+            </tr>
+            <tr v-for="(user, index) in allUsers" :key="user.id" 
+              :class="{'light-row': index % 2 === 0, 'dark-row': index % 2 !== 0}">
+            <td>@{{ user.username }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.surname }}</td>
+            <td>{{ getGender(user.gender) }}</td>
+            <td>{{ getRole(user.role) }}</td> 
+          </tr>
+        </table>
+      </table>
+      </div>
+      </div>
       
       <!-- MANAGER: Podaci o fabrici i cokoladama -->
       <div class="right-column" v-if="user?.role === 'MANAGER'">
@@ -235,6 +260,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
+import { format } from 'date-fns';
 
 const route = useRoute();
 const username = route.params.username;
@@ -255,9 +281,11 @@ const showEditModal = ref(false);
 const editedChocolate = ref({});
 const showEditProfileModal = ref(false);
 const editedUser = ref({});
+const allUsers = ref([]);
 
 onMounted(async () => {
   await fetchUser();
+    await fetchAllUsers();
 });
 
 const getFactoryImagePath = (imageName) => `/assets/FactoryLogos/${imageName}`;
@@ -280,6 +308,14 @@ async function fetchUser() {
   }
 }
 
+async function fetchAllUsers() {
+  try {
+    const response = await axios.get(`http://localhost:8080/WebShopAppREST/rest/users`);
+    allUsers.value = response.data;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+  }
+}
 
 async function fetchFactory(factoryId) {
   try {
@@ -456,6 +492,44 @@ function getChocolateKind(chocolate) {
       message = "Unknown kind";
   }
   return message;
+}
+
+function getGender(gender){
+  let message;
+  switch (gender){
+    case "MALE":
+      message = "Male";
+      break;
+    case "FEMALE":
+      message = "Female";
+      break;
+    default:
+      message = "Unknown gender";
+  }
+  return message;
+
+}
+
+function getRole(role){
+  let message;
+  switch (role){
+    case "ADMIN":
+      message = "Admin";
+      break;
+    case "MANAGER":
+      message = "Manager";
+      break;
+    case "WORKER":
+      message = "Worker";
+      break;
+    case "CUSTOMER":
+      message = "Customer";
+      break;
+    default:
+      message = "Unknown gender";
+  }
+  return message;
+
 }
 
 </script>
@@ -647,6 +721,24 @@ h3{
   text-align: left;
 }
 .chocolates-table th {
+  background-color: rgb(230, 200, 180);
+}
+
+.users-table {
+  width: 800px;
+  margin: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 15px;
+  overflow: hidden;
+  justify-content: center;
+}
+.users-table th, .users-table td {
+  padding: 8px;
+  height: 40px;
+  text-align: left;
+}
+.users-table th {
   background-color: rgb(230, 200, 180);
 }
 
