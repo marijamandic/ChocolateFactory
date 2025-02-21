@@ -203,7 +203,7 @@ public class ChocolateDAO {
 			}
 		} catch(IOException e) {
 			e.printStackTrace();
-			System.out.println("Error while deleting chocolate from file.");
+			System.out.println("Error while updating chocolate from file.");
 			return false;
 		}
 		return true;

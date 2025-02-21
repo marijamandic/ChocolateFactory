@@ -1,6 +1,7 @@
 package dao;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import beans.Chocolate;
 import beans.CustomerType;
 import beans.Factory;
 import beans.LoginRequest;
@@ -172,6 +174,34 @@ public class UserDAO {
 	    }
 
 	    return user;
+	}
+	
+	public boolean updateUser(User updatedUser) {
+		String filepath = contextPath + "users.csv";
+		
+		if(!users.containsKey(updatedUser.getId()))
+			return false;
+		
+		users.put(updatedUser.getId(), updatedUser);
+		
+		try(BufferedWriter writer = new BufferedWriter(new FileWriter(filepath))){
+			writer.write("id,korisnicko ime,lozinka,ime,prezime,pol,datum rodjenja,uloga,fabrika,broj bodova,tip kupca");
+			writer.newLine();
+			for(User user : users.values()) {
+				if (user.getRole().equals(Role.valueOf("CUSTOMER")))
+		            writer.write(customerToFileFormat(user));
+		        else if (user.getRole().equals(Role.valueOf("MANAGER")))
+		            writer.write(managerToFileFormat(user));
+		        else
+		            writer.write(workerToFileFormat(user));
+				writer.newLine();
+			}
+		} catch(IOException e) {
+			e.printStackTrace();
+			System.out.println("Error while updating chocolate from file.");
+			return false;
+		}
+		return true;
 	}
 	
 	private String customerToFileFormat(User user) {
