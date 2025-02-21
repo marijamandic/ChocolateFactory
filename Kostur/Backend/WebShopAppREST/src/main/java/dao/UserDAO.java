@@ -156,8 +156,6 @@ public class UserDAO {
 	    users.put(user.getId(), user);
 	    System.out.println("User " + user.getUsername() + " added successfully.");
 	    
-	    
-	    //TODO: promeni apsolutnu putanju u relativnu
 	    String filePath = contextPath + "users.csv";
 	    System.out.println("Writing to file: " + filePath);
 

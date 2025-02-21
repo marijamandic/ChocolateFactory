@@ -6,10 +6,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -24,212 +26,220 @@ public class ChocolateDAO {
 	private Map<String, Chocolate> chocolates = new HashMap<>();
 	private FactoryDAO factoryDAO;
 	private String contextPath;
-	
+
 	public ChocolateDAO() {
 		this.factoryDAO = new FactoryDAO();
 	}
-	
+
 	public ChocolateDAO(String contextPath) {
 		this.contextPath = contextPath;
 		this.factoryDAO = new FactoryDAO(contextPath);
 		loadChocolates(contextPath);
 	}
-	
+
 	public ChocolateDAO(String contextPath, FactoryDAO factoryDAO) {
 		this.contextPath = contextPath;
-	    this.factoryDAO = (factoryDAO != null) ? factoryDAO : new FactoryDAO(contextPath);
-	    loadChocolates(contextPath);
+		this.factoryDAO = (factoryDAO != null) ? factoryDAO : new FactoryDAO(contextPath);
+		loadChocolates(contextPath);
 	}
-	
+
 	public Chocolate findChocolateById(String id) {
-	    Chocolate chocolate = chocolates.get(id);
-	    if (chocolate == null) {
-	        System.out.println("Chocolate with ID " + id + " not found in the chocolates map.");
-	    }
-	    return chocolate;
+		Chocolate chocolate = chocolates.get(id);
+		if (chocolate == null) {
+			System.out.println("Chocolate with ID " + id + " not found in the chocolates map.");
+		}
+		return chocolate;
 	}
 
 	public Collection<Chocolate> findAll() {
-	    return chocolates.values().stream()
-	                      .filter(chocolate -> !chocolate.getIsDeleted())
-	                      .collect(Collectors.toList());
+		return chocolates.values().stream().collect(Collectors.toList());
 	}
 
 	public Collection<Chocolate> findByFactory(String id) {
-	    return chocolates.values().stream()
-	                      .filter(chocolate -> (!chocolate.getIsDeleted() && chocolate.getFactory().getId().equals(id)))
-	                      .collect(Collectors.toList());
+		return chocolates.values().stream().filter(chocolate -> (chocolate.getFactory().getId().equals(id)))
+				.collect(Collectors.toList());
 	}
-	
-    private void loadChocolates(String contextPath) {
-    	String filePath = contextPath + "chocolates.csv";
-        File file = new File(filePath);
 
-        if (!file.exists()) {
-            System.err.println("ERROR: chocolates.csv file not found at " + filePath);
-            return;
-        } else {
-            System.out.println("Loading chocolates from: " + filePath);
-        }
-        
-        try (BufferedReader in = new BufferedReader(new FileReader(file))) {
-            in.readLine();	// presakaknje zaglavlja
+	private void loadChocolates(String contextPath) {
+		String filePath = contextPath + "chocolates.csv";
+		File file = new File(filePath);
 
-            String line;
-            while ((line = in.readLine()) != null) {
-                line = line.trim();
-                if (line.isEmpty() || line.startsWith("#"))
-                    continue;
+		if (!file.exists()) {
+			System.err.println("ERROR: chocolates.csv file not found at " + filePath);
+			return;
+		} else {
+			System.out.println("Loading chocolates from: " + filePath);
+		}
 
-                String[] parts = line.split(",");
-                if (parts.length < 12) {
-                    System.err.println("Invalid chocolate entry: " + line);
-                    continue;
-                }
+		try (BufferedReader in = new BufferedReader(new FileReader(file))) {
+			in.readLine(); // presakaknje zaglavlja
 
-                String id = parts[0].trim();
-                String name = parts[1].trim();
-                double price = Double.parseDouble(parts[2].trim());
-                ChocolateType type = ChocolateType.valueOf(parts[3].trim());
-                String factoryId = parts[4].trim();
-                Factory factory = factoryDAO.findFactoryById(factoryId);
+			String line;
+			while ((line = in.readLine()) != null) {
+				line = line.trim();
+				if (line.isEmpty() || line.startsWith("#"))
+					continue;
 
-                Kind kind = Kind.valueOf(parts[5].trim());
-                int weight = Integer.parseInt(parts[6].trim());
-                String description = parts[7].trim();
-                String image = parts[8].trim();
-                boolean inStock = Boolean.parseBoolean(parts[9].trim());
-                int quantity = Integer.parseInt(parts[10].trim());
-                boolean isDeleted = Boolean.parseBoolean(parts[11].trim());
+				String[] parts = line.split(",");
+				if (parts.length < 11) {
+					System.err.println("Invalid chocolate entry: " + line);
+					continue;
+				}
 
-                if (factory != null) {
-                    chocolates.put(id, new Chocolate(id, name, price, type, factory, kind, weight, description, image, inStock, quantity, isDeleted));
-                } else {
-                    System.err.println("Factory with ID " + factoryId + " not found for chocolate " + id);
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
+				String id = parts[0].trim();
+				String name = parts[1].trim();
+				double price = Double.parseDouble(parts[2].trim());
+				ChocolateType type = ChocolateType.valueOf(parts[3].trim());
+				String factoryId = parts[4].trim();
+				Factory factory = factoryDAO.findFactoryById(factoryId);
 
-	
-    
-    public Chocolate addChocolate(Chocolate chocolate) {
-        Set<Integer> existingIds = chocolates.keySet().stream()
-                .map(Integer::parseInt)  // pretvori ID-jeve u brojeve
-                .filter(id -> !chocolates.get(id).getIsDeleted())  // filtriraj obrisane čokolade
-                .collect(Collectors.toSet());
+				Kind kind = Kind.valueOf(parts[5].trim());
+				int weight = Integer.parseInt(parts[6].trim());
+				String description = parts[7].trim();
+				String image = parts[8].trim();
+				boolean inStock = Boolean.parseBoolean(parts[9].trim());
+				int quantity = Integer.parseInt(parts[10].trim());
 
-        int maxId = 0;
-        while (existingIds.contains(maxId)) {
-            maxId++;
-        }
+				if (factory != null) {
+					chocolates.put(id, new Chocolate(id, name, price, type, factory, kind, weight, description, image,
+							inStock, quantity));
+				} else {
+					System.err.println("Factory with ID " + factoryId + " not found for chocolate " + id);
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
 
-        chocolate.setId(String.valueOf(maxId));
-        chocolates.put(chocolate.getId(), chocolate);
-        System.out.println("Added chocolate: " + chocolate.getId() + ", " + chocolate.getName());
-        saveAllChocolates();
-        return chocolate;
-    }
-
-
-	public Chocolate updateChocolate(String id, Chocolate chocolate) {
-		Chocolate c = findChocolateById(id);
-		if (c == null) {
+	public Chocolate addChocolate(Chocolate chocolate) {
+		if (chocolates.containsKey(chocolate.getId())) {
+			System.out.println("Chocolate with ID " + chocolate.getId() + " already exists.");
 			return null;
 		}
-		if (chocolate.getName() != null) c.setName(chocolate.getName());
-	    if (chocolate.getPrice() != 0) c.setPrice(chocolate.getPrice());
-	    if (chocolate.getType() != null) c.setType(chocolate.getType());
-	    if (chocolate.getFactory() != null) c.setFactory(chocolate.getFactory());
-	    if (chocolate.getKind() != null) c.setKind(chocolate.getKind());
-	    if (chocolate.getWeight() != 0) c.setWeight(chocolate.getWeight());
-	    if (chocolate.getDescription() != null) c.setDescription(chocolate.getDescription());
-	    if (chocolate.getImage() != null) c.setImage(chocolate.getImage());
-	    c.setInStock(chocolate.isInStock());
-	    if (chocolate.getQuantity() >= 0) c.setQuantity(chocolate.getQuantity());
 
+		chocolate.setId(generateNewId());
+		chocolates.put(chocolate.getId(), chocolate);
+		System.out.println("Chocolate " + chocolate.getName() + " added successfully.");
 
-        saveAllChocolates();
-		return c;
+		String filepath = contextPath + "chocolates.csv";
+		System.out.println("Writing to file: " + filepath);
+
+		try (PrintWriter writer = new PrintWriter(new FileWriter(filepath, true))) {
+			writer.println(newChocolateToFileFormat(chocolate));
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("Error while writing chocolate to file.");
+		}
+		return chocolate;
 	}
 
-	public Chocolate deleteChocolate(String id) {
-		Chocolate chocolate = chocolates.get(id);
-        if (chocolate != null) {
-            chocolate.setIsDeleted(true);
-            saveAllChocolates(); 
-        }
-        return chocolate;
-	}
-/*	
-	private void saveAllChocolates() {
-        BufferedWriter out = null;
-        try {
-            File file = new File(contextPath + "/chocolates.txt");
-            out = new BufferedWriter(new FileWriter(file));
+	public String generateNewId() {
+		int maxId = 0;
 
-            for (Chocolate chocolate : chocolates.values()) {
-                out.write(chocolateToFileFormat(chocolate));
-                out.newLine();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-*/
+		String filePath = contextPath + "chocolates.csv";
+		try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+			String line;
+			while ((line = br.readLine()) != null) {
+				String[] fields = line.split(",");
+				String idString = fields[0].trim();
+				try {
+					int id = Integer.parseInt(idString);
+					if (id > maxId) {
+						maxId = id;
+					}
+				} catch (NumberFormatException e) {
+					System.out.println("Skipping invalid ID: " + idString);
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		int newId = maxId + 1;
+
+		return Integer.toString(newId);
+	}
+
+	public boolean deleteChocolate(String chocolateId) {
+		String filePath = contextPath + "chocolates.csv";
+		
+		if(!chocolates.containsKey(chocolateId)) {
+			return false;
+		}
+		
+		chocolates.remove(chocolateId);
+		
+		try(BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))){
+			writer.write("id,name,price,type,factoryId,kind,weight,description,image,inStock,quantity");
+			writer.newLine();
+			for(Chocolate chocolate : chocolates.values()) {
+				writer.write(chocolateToFileFormat(chocolate));
+				writer.newLine();
+			}
+		} catch(IOException e) {
+			e.printStackTrace();
+			System.out.println("Error while deleting chocolate from file.");
+			return false;
+		}
+		return true;
+	}
 	
+	public boolean updateChocolate(Chocolate updatedChocolate) {
+		String filePath = contextPath + "chocolates.csv";
+
+		if(!chocolates.containsKey(updatedChocolate.getId())) {
+			return false;
+		}
+		
+		chocolates.put(updatedChocolate.getId(), updatedChocolate);
+		
+		try(BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))){
+			writer.write("id,name,price,type,factoryId,kind,weight,description,image,inStock,quantity");
+			writer.newLine();
+			for(Chocolate chocolate : chocolates.values()) {
+				writer.write(chocolateToFileFormat(chocolate));
+				writer.newLine();
+			}
+		} catch(IOException e) {
+			e.printStackTrace();
+			System.out.println("Error while deleting chocolate from file.");
+			return false;
+		}
+		return true;
+	}
+
 	public Collection<Chocolate> getChocolateByFactory(String factoryId) {
-		return chocolates.values().stream()
-	            .filter(chocolate -> chocolate.getFactory().getId().equals(factoryId))
-	            .collect(Collectors.toList());
-	}
-	
-	private void saveAllChocolates() {
-		try (BufferedWriter out = new BufferedWriter(new FileWriter(contextPath + "/chocolates.csv", true))) {
-			File file = new File(contextPath + "chocolates.csv");
-			
-			if (file.length() == 0) {
-	            out.write("id,name,price,type,factoryId,kind,weight,description,image,inStock,quantity,isDeleted");
-	            out.newLine();
-	        }
-			
-			for (Chocolate chocolate : chocolates.values()) {
-	            if (!chocolate.getIsDeleted()) {
-	                out.write(chocolateToFileFormat(chocolate));
-	                out.newLine();
-	                System.out.println("Saved chocolate: " + chocolate.getId() + ", " + chocolate.getName());
-	            }
-	        }
-	    } catch (IOException e) {
-	        e.printStackTrace();
-	    }
+		return chocolates.values().stream().filter(chocolate -> chocolate.getFactory().getId().equals(factoryId))
+				.collect(Collectors.toList());
 	}
 
+	private String newChocolateToFileFormat(Chocolate chocolate) {
+		return chocolate.getId() + "," +
+				chocolate.getName() + "," + 
+				chocolate.getPrice() + "," + 
+				chocolate.getType()+ "," + 
+				chocolate.getFactory().getId() + "," + 
+				chocolate.getKind() + "," + 
+				chocolate.getWeight() + "," + 
+				chocolate.getDescription() + "," + 
+				chocolate.getImage() + "," + 
+				"false" + "," + 
+				"0";
+	}
 	
-    private String chocolateToFileFormat(Chocolate chocolate) {
-        return chocolate.getId() + "," +
-               chocolate.getName() + "," +
-               chocolate.getPrice() + "," +
-               chocolate.getType() + "," +
-               chocolate.getFactory().getId() + "," +
-               chocolate.getKind() + "," +
-               chocolate.getWeight() + "," +
-               chocolate.getDescription() + "," +
-               chocolate.getImage() + "," +
-               chocolate.isInStock() + "," +
-               chocolate.getQuantity() + "," +
-               chocolate.getIsDeleted();
-    }
+	private String chocolateToFileFormat(Chocolate chocolate) {
+		return chocolate.getId() + "," +
+				chocolate.getName() + "," + 
+				chocolate.getPrice() + "," + 
+				chocolate.getType()+ "," + 
+				chocolate.getFactory().getId() + "," + 
+				chocolate.getKind() + "," + 
+				chocolate.getWeight() + "," + 
+				chocolate.getDescription() + "," + 
+				chocolate.getImage() + "," + 
+				chocolate.isInStock() + "," + 
+				chocolate.getQuantity();
+	}
 
-    
 }
