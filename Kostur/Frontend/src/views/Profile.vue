@@ -11,15 +11,58 @@
           <h3>{{ user?.name }} {{ user?.surname }}</h3>
           <p> @{{ user?.username }}</p>
           <p> {{ user?.role }}</p>
-          <button @click="editProfile">Edit Profile</button>
+          <button  @click="editUser(user.id)" >Edit Profile</button>
         </div>
+      </div>
+
+      <!-- CUSTOMER -->
+      <div class="right-column" v-if="user?.role === 'CUSTOMER'">
+        <div class="image-section">
+          <img :src="getCustomerTypeImagePath(user?.customerType.type)" :alt="user.alt">
+        </div>
+    
+        <div class="text-section">
+          <h1>You are a {{user.customerType.type}} customer!</h1>
+          <p>Your score is {{user.score}}</p>
+        </div>
+    
+        <div class="bottom-text" v-if="user.customerType.type !== 'GOLD'">
+          <p>You need {{ user.customerType.score - user.score }} more points to upgrade your status</p>
+        </div>
+      </div>
+
+      <!-- ADMIN -->
+      <div class="right-column" v-if="user?.role === 'ADMIN'">
+
+      <div class="users-list">
+        <h3>Users</h3>
+        <table v-if="allUsers.length > 0" class="table-container">
+          <table class="users-table">
+            <tr>
+              <td>Username</td>
+              <td>Name</td>
+              <td>Surname</td>
+              <td>Gender</td>
+              <td>Role</td>
+            </tr>
+            <tr v-for="(user, index) in allUsers" :key="user.id" 
+              :class="{'light-row': index % 2 === 0, 'dark-row': index % 2 !== 0}">
+            <td>@{{ user.username }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.surname }}</td>
+            <td>{{ getGender(user.gender) }}</td>
+            <td>{{ getRole(user.role) }}</td> 
+          </tr>
+        </table>
+      </table>
+      </div>
       </div>
       
       <!-- MANAGER: Podaci o fabrici i cokoladama -->
       <div class="right-column" v-if="user?.role === 'MANAGER'">
         <div class="factory-info">
           <h2>{{ factory?.name }}</h2>
-          <!-- <img :src="getFactoryImagePath(factory?.logo)" :alt="factory.alt"> -->
+          <!-- <img :src="getFactoryImagePath(factory?.logo)"> -->
           <p>Location: {{ factory?.location.address }}</p>
         </div>
         
@@ -47,6 +90,7 @@
                 <div class="action-buttons">
                   <button 
                     @click="editChocolate(chocolate.id)" 
+                    
                     :class="{'light-btn': index % 2 !== 0}"
                   >
                     Edit
@@ -120,7 +164,6 @@
   </div>
 
   <!-- Edit cokolade -->
-<!-- Modal za edit čokolade -->
 <div v-if="showEditModal" class="modal-overlay">
   <div class="modal">
     <h2>Edit Chocolate</h2>
@@ -165,6 +208,51 @@
   </div>
 </div>
 
+ <!-- Edit profila -->
+<div v-if="showEditProfileModal" class="modal-overlay">
+  <div class="modal">
+    <h2>Edit Profile</h2>
+
+  <form @submit.prevent="updateUser">
+    <div>
+      <label for="username">Username:</label>
+      <input type="text" id="username" v-model="editedUser.username" required />
+    </div>
+
+    <div>
+      <label for="password">Password:</label>
+      <input type="password" id="password" v-model="editedUser.password" required />
+    </div>
+
+    <div>
+      <label for="firstName">Name:</label>
+      <input type="text" id="firstName" v-model="editedUser.name" required />
+    </div>
+
+    <div>
+      <label for="lastName">Surname:</label>
+      <input type="text" id="lastName" v-model="editedUser.surname" required />
+    </div>
+
+    <div>
+      <label for="gender">Pol:</label>
+      <select id="gender" v-model="editedUser.gender" required>
+        <option value="MALE">Male</option>
+        <option value="FEMALE">Female</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="dob">Birthday:</label>
+      <input type="date" id="dob" v-model="editedUser.birthday" required />
+    </div>
+
+    <button type="submit">Done</button>
+    <button type="button" @click="showEditProfileModal = false">Cancel</button>
+
+  </form>
+  </div>
+</div>
 
 </template>
 
@@ -172,6 +260,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
+import { format } from 'date-fns';
 
 const route = useRoute();
 const username = route.params.username;
@@ -190,22 +279,41 @@ const chocolate = ref({
 });
 const showEditModal = ref(false);
 const editedChocolate = ref({});
+const showEditProfileModal = ref(false);
+const editedUser = ref({});
+const allUsers = ref([]);
 
 onMounted(async () => {
   await fetchUser();
+    await fetchAllUsers();
 });
+
+const getFactoryImagePath = (imageName) => `/assets/FactoryLogos/${imageName}`;
+const getCustomerTypeImagePath = (imageName) => `/assets/CustomerTypes/${imageName}.png`;
 
 async function fetchUser() {
   try {
+    console.log("Fetching user for username:", username);
     const response = await axios.get(`http://localhost:8080/WebShopAppREST/rest/users/getByUsername/${username}`);
+    console.log("User data:", response.data);
     user.value = response.data;
-    
-    if (user.value.role === 'MANAGER') {
+
+    if (user.value?.role === 'MANAGER' && user.value.factory) {
+      console.log("Fetching factory for ID:", user.value.factory.id);
       await fetchFactory(user.value.factory.id);
       await fetchChocolates(user.value.factory.id);
     }
   } catch (error) {
     console.error('Error loading user: ', error);
+  }
+}
+
+async function fetchAllUsers() {
+  try {
+    const response = await axios.get(`http://localhost:8080/WebShopAppREST/rest/users`);
+    allUsers.value = response.data;
+  } catch (error) {
+    console.error('Error fetching users:', error);
   }
 }
 
@@ -231,17 +339,15 @@ function editChocolate(id) {
   const chocolateToEdit = chocolates.value.find(choco => choco.id === id);
   if (!chocolateToEdit) return;
   
-  editedChocolate.value = { ...chocolateToEdit }; // Kopiramo podatke u novi objekat
+  editedChocolate.value = { ...chocolateToEdit }; 
   showEditModal.value = true;
 }
 
-// Funkcija za upload nove slike
 function handleEditImageUpload(event) {
   const file = event.target.files[0];
   editedChocolate.value.image = file;
 }
 
-// Funkcija za ažuriranje čokolade
 async function updateChocolate() {
   try {
     const updatedChocolate = {
@@ -264,6 +370,31 @@ async function updateChocolate() {
     showEditModal.value = false;
   } catch (error) {
     console.error("Error updating chocolate:", error);
+  }
+}
+
+function editUser(id) {
+  editedUser.value = { ...user.value };
+  showEditProfileModal.value = true;
+}
+
+
+async function updateUser() {
+  console.log("PUT URL ID:", user.value.id);
+  console.log("Body ID:", editedUser.value.id);
+
+  try {
+    await axios.put(
+      `http://localhost:8080/WebShopAppREST/rest/users/${user.value.id}`,
+      editedUser.value,
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    Object.assign(user.value, editedUser.value); // Ažuriraj glavni objekat
+    alert("User updated successfully!");
+    showEditProfileModal.value = false;
+  } catch (error) {
+    console.error("Error updating user:", error);
   }
 }
 
@@ -363,6 +494,44 @@ function getChocolateKind(chocolate) {
   return message;
 }
 
+function getGender(gender){
+  let message;
+  switch (gender){
+    case "MALE":
+      message = "Male";
+      break;
+    case "FEMALE":
+      message = "Female";
+      break;
+    default:
+      message = "Unknown gender";
+  }
+  return message;
+
+}
+
+function getRole(role){
+  let message;
+  switch (role){
+    case "ADMIN":
+      message = "Admin";
+      break;
+    case "MANAGER":
+      message = "Manager";
+      break;
+    case "WORKER":
+      message = "Worker";
+      break;
+    case "CUSTOMER":
+      message = "Customer";
+      break;
+    default:
+      message = "Unknown gender";
+  }
+  return message;
+
+}
+
 </script>
 
 <style scoped>
@@ -380,7 +549,6 @@ function getChocolateKind(chocolate) {
   justify-content: left;
   width: 30%;
   padding: 20px;
-  background-color: #f9f9f9;
   border-radius: 8px;
   color: rgb(129, 70, 41);
 }
@@ -467,11 +635,11 @@ button:hover {
 
 .modal h2{
   text-align: center;
-    display: block;
-    margin-bottom: 15px;
-    color: white;
-    font-weight: bold;
-    font-size: 25px;
+  display: block;
+  margin-bottom: 15px;
+  color: white;
+  font-weight: bold;
+  font-size: 25px;
 }
 
 .modal div {
@@ -553,6 +721,24 @@ h3{
   text-align: left;
 }
 .chocolates-table th {
+  background-color: rgb(230, 200, 180);
+}
+
+.users-table {
+  width: 800px;
+  margin: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 15px;
+  overflow: hidden;
+  justify-content: center;
+}
+.users-table th, .users-table td {
+  padding: 8px;
+  height: 40px;
+  text-align: left;
+}
+.users-table th {
   background-color: rgb(230, 200, 180);
 }
 

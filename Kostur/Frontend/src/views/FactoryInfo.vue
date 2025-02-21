@@ -44,7 +44,6 @@
               <td>{{ chocolate.price }}</td>
               <td>{{ chocolate.quantity }}</td>
               <td>{{ getChocolateType(chocolate) }}</td>
-              <td><button @click="deleteChocolate(chocolate.uuid)">Delete</button></td>
             </tr>
           </table>
         </table>
@@ -132,15 +131,6 @@ function generateUUID() {
       v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
-}
-
-// Funkcija za brisanje čokolade sa odabranim uuid-om
-function deleteChocolate(chocolateId) {
-  // Pronalaženje indeksa čokolade sa datim uuid-om
-  const index = chocolates.value.findIndex(chocolate => chocolate.uuid === chocolateId);
-  if (index !== -1) {
-    chocolates.value.splice(index, 1); // Uklanjanje čokolade iz liste
-  }
 }
 
 function getChocolateType(chocolate) {
