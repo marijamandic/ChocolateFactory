@@ -100,4 +100,13 @@ public class ChocolateService {
 		}
 	 }
 
+	@GET
+	@Path("/getByFactory/{id}")
+	public Collection<Chocolate> getChocolatesByFactory(@PathParam("id") String id) {
+		Collection<Chocolate> chocolates = chocolateDAO.findByFactory(id);
+		if (chocolates != null) {
+			return chocolates;
+		}
+		return null;
+	}
 }

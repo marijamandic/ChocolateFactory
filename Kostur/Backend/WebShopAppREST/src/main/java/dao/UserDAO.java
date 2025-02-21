@@ -233,6 +233,19 @@ public class UserDAO {
 	    return user;
 	}
 
+	public String getFactoryByManager(String userId) {
+	    User user = users.values().stream()
+	                     .filter(u -> u.getId().equals(userId))
+	                     .findFirst()
+	                     .orElse(null);
+
+	    if (user == null) {
+	        System.out.println("User with id " + userId + " not found in users map.");
+	    }
+	    Factory factory = user.getFactory();
+	    
+	    return factory.getId();
+	}
 
 	public String authenticate(String username, String password) {
 	    User user = findUserByUsername(username);

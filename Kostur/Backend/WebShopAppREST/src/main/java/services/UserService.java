@@ -16,11 +16,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import beans.Chocolate;
+import beans.Factory;
 import beans.LoginRequest;
 import beans.LoginResponse;
 import beans.User;
 import beans.enums.Role;
 import dao.ChocolateDAO;
+import dao.FactoryDAO;
 import dao.UserDAO;
 
 @Path("/users")
@@ -101,7 +103,16 @@ public class UserService{
 	    }
 	}
 
-	
+	@GET
+    @Path("/getFactory/{managerId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String findFactoryByManager(@PathParam("managerId") String id) {
+		String factory = userDAO.getFactoryByManager(id);
+        if (factory != null) {
+            return factory;
+        } 
+        return null;
+    }
 	
 	
 }
