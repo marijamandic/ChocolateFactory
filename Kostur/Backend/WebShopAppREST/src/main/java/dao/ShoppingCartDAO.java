@@ -3,14 +3,19 @@ package dao;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import beans.Chocolate;
 import beans.ShoppingCart;
 import beans.User;
+import beans.enums.Role;
 
 public class ShoppingCartDAO{
 	private Map<String, ShoppingCart> shoppingCarts = new HashMap<>();
@@ -90,6 +95,148 @@ public class ShoppingCartDAO{
 	        System.out.println("Shopping cart with ID " + id + " not found in the shoppingCarts map.");
 	    }
 		return shoppingCart;
+	}
+	
+	public List<ShoppingCart> findAll(){
+		return shoppingCarts.values().stream().collect(Collectors.toList());
+	}
+	
+	public String generateNewId() {
+	    int maxId = 0;
+
+	    String filePath = contextPath + "shoppingCarts.csv";
+	    try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+	        String line;
+	        while ((line = br.readLine()) != null) {
+	            String[] fields = line.split(",");
+	            String idString = fields[0].trim();
+	            try {
+	                int id = Integer.parseInt(idString);
+	                if (id > maxId) {
+	                    maxId = id;
+	                }
+	            } catch (NumberFormatException e) {
+	                System.out.println("Skipping invalid ID: " + idString);
+	            }
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+
+	    int newId = maxId + 1;
+	    
+	    return Integer.toString(newId);
+	}
+	
+	public ShoppingCart addCart(ShoppingCart shoppingCart) {
+	    if (shoppingCarts.containsKey(shoppingCart.getId())) {
+	        System.out.println("Shopping cart with ID " + shoppingCart.getId() + " already exists.");
+	        return null;
+	    }
+	    
+	    shoppingCart.setId(generateNewId());
+	    shoppingCart.setPrice(0.0);
+	    shoppingCarts.put(shoppingCart.getId(), shoppingCart);
+	    System.out.println("Shopping cart " + shoppingCart.getId() + " added successfully.");
+	    
+	    String filePath = contextPath + "shoppingCarts.csv";
+	    System.out.println("Writing to file: " + filePath);
+
+	    try (PrintWriter writer = new PrintWriter(new FileWriter(filePath, true))) {
+	    	writer.println(shoppingCartToFileFormat(shoppingCart));
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        System.out.println("Error while writing shopping cart to file.");
+	    }
+
+	    return shoppingCart;
+	}
+	
+	public ShoppingCart addToCart(String id, String chocolateId) {
+	    ShoppingCart shoppingCart = shoppingCarts.get(id);
+	    Chocolate chocolate = chocolateDAO.findChocolateById(chocolateId);
+	    
+	    if(chocolate == null) {
+	    	System.out.println("Chocolate with ID: " + chocolateId + " not found.");
+	    	return null;
+	    }
+	    
+	    if(shoppingCart == null) {
+	    	System.out.println("Chocolate with ID: " + chocolateId + " not found.");
+	    	return null;
+	    }
+	    
+	    shoppingCart.getChocolates().add(chocolate);
+	    double newPrice = shoppingCart.getChocolates().stream()
+                .mapToDouble(Chocolate::getPrice)
+                .sum();
+		shoppingCart.setPrice(newPrice);
+		
+	    shoppingCarts.put(id, shoppingCart);
+	    writeAllShoppingCartsToFile();
+	    
+	    return shoppingCart;
+	}
+	
+	public ShoppingCart removeFromCart(String id, String chocolateId) {
+		ShoppingCart shoppingCart = shoppingCarts.get(id);
+		if(shoppingCart == null) {
+	    	System.out.println("Shopping cart with ID: " + id + " not found.");
+	    	return null;
+	    }
+		
+	    Chocolate chocolate = chocolateDAO.findChocolateById(chocolateId);
+	    if(chocolate == null) {
+	    	System.out.println("Chocolate with ID: " + chocolateId + " not found.");
+	    	return null;
+	    }
+	    
+	    boolean removed = shoppingCart.getChocolates().removeIf(choco -> choco.getId().equals(chocolate.getId()));
+	    
+	    if(!removed) {
+	    	System.out.println("Chocolate with ID: " + chocolate.getId() + " is not in the cart.");
+	    	return shoppingCart;
+	    }
+	    
+	    shoppingCarts.put(id, shoppingCart);
+	    double newPrice = shoppingCart.getChocolates().stream()
+                .mapToDouble(Chocolate::getPrice)
+                .sum();
+		shoppingCart.setPrice(newPrice);
+		
+		shoppingCarts.put(id, shoppingCart);
+		writeAllShoppingCartsToFile();
+		
+		System.out.println("Chocolate with ID: " + chocolate.getId() + " removed successfully.");
+		return shoppingCart;
+	}
+	
+	private String shoppingCartToFileFormat(ShoppingCart shoppingCart) {
+		return shoppingCart.getId() + "," + 
+				chocolatesToString(shoppingCart.getChocolates()) + "," + 
+				shoppingCart.getUser().getId() + "," +
+				shoppingCart.getPrice();
+	}
+	
+	private void writeAllShoppingCartsToFile() {
+	    String filePath = contextPath + "shoppingCarts.csv";
+	    System.out.println("Rewriting file: " + filePath);
+
+	    try (PrintWriter writer = new PrintWriter(new FileWriter(filePath, false))) {
+	    	writer.println("id,chocolates,userId,price");
+	        for (ShoppingCart cart : shoppingCarts.values()) {
+	            writer.println(shoppingCartToFileFormat(cart));
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        System.out.println("Error while writing all shopping carts to file.");
+	    }
+	}
+	
+	private String chocolatesToString(List<Chocolate> chocolates) {
+	    return chocolates.stream()
+	                     .map(Chocolate::getId)
+	                     .collect(Collectors.joining(";"));
 	}
 
 }

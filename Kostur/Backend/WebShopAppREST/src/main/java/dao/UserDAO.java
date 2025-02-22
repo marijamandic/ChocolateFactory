@@ -204,6 +204,77 @@ public class UserDAO {
 		return true;
 	}
 	
+	public User addScore(String id, double score) {
+		if (!users.containsKey(id)) {
+	        System.out.println("User with ID " + id + " do not exists.");
+	        return null;
+	    }
+		
+		String filepath = contextPath + "users.csv";
+		
+		User customer = findById(id);
+		customer.setScore(customer.getScore() + score);
+		users.put(customer.getId(), customer);
+		
+		try(BufferedWriter writer = new BufferedWriter(new FileWriter(filepath))){
+			writer.write("id,korisnicko ime,lozinka,ime,prezime,pol,datum rodjenja,uloga,fabrika,broj bodova,tip kupca");
+			writer.newLine();
+			for(User user : users.values()) {
+				if (user.getRole().equals(Role.valueOf("CUSTOMER")))
+		            writer.write(customerToFileFormat(user));
+		        else if (user.getRole().equals(Role.valueOf("MANAGER")))
+		            writer.write(managerToFileFormat(user));
+		        else
+		            writer.write(workerToFileFormat(user));
+				writer.newLine();
+			}
+		} catch(IOException e) {
+			e.printStackTrace();
+			System.out.println("Error while updating chocolate from file.");
+			return null;
+		}
+		
+		return customer;
+	}
+	
+	public User removeScore(String id, double score) {
+		if (!users.containsKey(id)) {
+	        System.out.println("User with ID " + id + " do not exists.");
+	        return null;
+	    }
+		
+		String filepath = contextPath + "users.csv";
+		
+		User customer = findById(id);
+		double newScore = customer.getScore() + score;
+	    if (newScore < 0) {
+	        System.out.println("User score cannot be negative.");
+	        return null;
+	    }
+	    customer.setScore(newScore);
+	    users.put(customer.getId(), customer);
+		
+		try(BufferedWriter writer = new BufferedWriter(new FileWriter(filepath))){
+			writer.write("id,korisnicko ime,lozinka,ime,prezime,pol,datum rodjenja,uloga,fabrika,broj bodova,tip kupca");
+			writer.newLine();
+			for(User user : users.values()) {
+				if (user.getRole().equals(Role.valueOf("CUSTOMER")))
+		            writer.write(customerToFileFormat(user));
+		        else if (user.getRole().equals(Role.valueOf("MANAGER")))
+		            writer.write(managerToFileFormat(user));
+		        else
+		            writer.write(workerToFileFormat(user));
+				writer.newLine();
+			}
+		} catch(IOException e) {
+			e.printStackTrace();
+			System.out.println("Error while updating chocolate from file.");
+			return null;
+		}
+		
+		return customer;
+	}
+	
 	private String customerToFileFormat(User user) {
 		return user.getId() + "," + 
 				user.getUsername() + "," + 
