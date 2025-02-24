@@ -181,7 +181,7 @@ public class ShoppingDAO{
 	    System.out.println("Updating file: " + filePath);
 
 	    try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-	        writer.write("id,factory,shoppingDateTime,status");
+	        writer.write("id,factory,shoppingDateTime,status,shoppingCart");
 	        writer.newLine();
 	        for (Shopping s : shoppings.values()) {
 	            writer.write(shoppingToFileFormat(s));

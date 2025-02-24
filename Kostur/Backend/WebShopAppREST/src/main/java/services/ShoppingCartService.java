@@ -71,21 +71,21 @@ public class ShoppingCartService{
 	
 	@PUT
 	@Path("/add/{id}/{chocoId}")
-	public Response addToCart(@PathParam("id") String id, @PathParam("chocoId") String chocolateId){
+	@Produces(MediaType.APPLICATION_JSON)
+	public ShoppingCart addToCart(@PathParam("id") String id, @PathParam("chocoId") String chocolateId){
 		ShoppingCart updated = shoppingCartDAO.addToCart(id, chocolateId);
 		if(updated != null)
-			return Response.ok("Shopping cart updated successfully").build();
-		else
-			return Response.status(Response.Status.NOT_FOUND).entity("Not found").build();
+			return updated;
+		return null;
 	}
 	
 	@PUT
 	@Path("/remove/{id}/{chocoId}")
-	public Response removeFromCart(@PathParam("id") String id, @PathParam("chocoId") String chocolateId){
+	@Produces(MediaType.APPLICATION_JSON)
+	public ShoppingCart removeFromCart(@PathParam("id") String id, @PathParam("chocoId") String chocolateId){
 		ShoppingCart updated = shoppingCartDAO.removeFromCart(id, chocolateId);
 		if(updated != null)
-			return Response.ok("Shopping cart updated successfully").build();
-		else
-			return Response.status(Response.Status.NOT_FOUND).entity("Not found").build();
+			return updated;
+		return null;
 	}
 }
