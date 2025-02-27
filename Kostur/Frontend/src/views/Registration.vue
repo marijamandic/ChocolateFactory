@@ -4,7 +4,8 @@
       <form @submit.prevent="registerUser">
         <div>
           <label for="username">Username:</label>
-          <input type="text" id="username" v-model="user.username" required />
+          <input type="text" id="username" v-model="user.username" @input="checkUsernameAvailability" required />
+          <div v-if="usernameTaken" class="error-message">Username not available</div>
         </div>
   
         <div>
@@ -15,6 +16,7 @@
         <div>
           <label for="confirmPassword">Confirm password:</label>
           <input type="password" id="confirmPassword" v-model="confirmPassword" required />
+          <div v-if="passwordMismatch" class="error-message">Passwords do not match</div>
         </div>
   
         <div>
@@ -47,11 +49,9 @@
           </select>
         </div>
   
-        <div v-if="passwordMismatch" class="error-message">
-          Lozinke se ne poklapaju.
-        </div>
-  
-        <button type="submit" :disabled="passwordMismatch">Register</button>
+        
+
+        <button type="submit" :disabled="passwordMismatch || usernameTaken">Register</button>
       </form>
     </div>
   </template>
@@ -96,6 +96,7 @@
   const passwordMismatch = ref(false);
   const factories = ref([]); 
   const isAdminLoggedIn = ref(false); 
+  const usernameTaken = ref(false);
   
   
   watch([user.value.password, confirmPassword], () => {
@@ -109,6 +110,21 @@
     }
   });
   
+  async function checkUsernameAvailability() {
+  if (!user.value.username) {
+    usernameTaken.value = false;
+    return;
+  }
+
+  try {
+    const response = await axios.get(`http://localhost:8080/WebShopAppREST/rest/users/check-username/${user.value.username}`);
+    usernameTaken.value = response.data;
+    console.log("usernameTaken: ", usernameTaken.value);
+  } catch (error) {
+    console.error("Greška prilikom provere username-a:", error);
+    usernameTaken.value = false;
+  }
+}
   
   async function registerUser() {
     if (passwordMismatch.value) {
@@ -133,14 +149,17 @@
     } else if (await isManager()) {
       userData.role = 'WORKER';
     }
+    else{
+      userData.customerType = user.value.customerType;
+    }
   
     try {
       const response = await axios.post('http://localhost:8080/WebShopAppREST/rest/users/add', userData);
       console.log('Uspešno registrovan korisnik:', response.data);
-      alert('Registracija uspešna!');
+      alert('User successfully registrated');
     } catch (error) {
       console.error('Greška prilikom registracije:', error);
-      alert('Došlo je do greške prilikom registrovanja korisnika.');
+      alert('Error while registering the user');
     }
   }
   

@@ -275,6 +275,11 @@ public class UserDAO {
 		return customer;
 	}
 	
+	public boolean checkUsername(String username) {
+		return users.values().stream()
+                .anyMatch(user -> user.getUsername().equals(username));
+	}
+	
 	private String customerToFileFormat(User user) {
 		return user.getId() + "," + 
 				user.getUsername() + "," + 
