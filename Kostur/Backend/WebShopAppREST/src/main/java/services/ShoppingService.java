@@ -66,6 +66,13 @@ public class ShoppingService{
 		return shoppingDAO.findByUserId(id);
     }
 	
+	@GET
+    @Path("getByFactory/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<Shopping> getByFactoryId(@PathParam("id") String id) {
+		return shoppingDAO.findByFactoryId(id);
+    }
+	
 	@POST
 	@Path("/add")
 	@Produces(MediaType.APPLICATION_JSON)
