@@ -105,6 +105,12 @@ public class ShoppingDAO{
 				.collect(Collectors.toList());
 	}
 	
+	public List<Shopping> findByUserId(String id){
+		return shoppings.values().stream()
+			   .filter(shopping -> (shopping.getShoppingCart().getUser().getId().equals(id) && shopping.getStatus() == Status.PROCESSING))
+			   .collect(Collectors.toList());
+	}
+	
 	public String generateNewId() {
 	    int maxId = 0;
 
@@ -217,5 +223,4 @@ public class ShoppingDAO{
 				shopping.getStatus() + "," + 
 				shopping.getShoppingCart().getId();
 	}
-	
 }

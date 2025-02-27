@@ -35,7 +35,6 @@
               <td>Description</td>
               <td>Kind</td>
               <td>Price</td>
-              <td>Quantity</td>
               <td>Type</td>
             </tr>
             <tr v-for="(chocolate, index) in chocolates" :key="chocolate.uuid" 
@@ -44,9 +43,13 @@
               <td>{{ chocolate.description }}</td>
               <td>{{ getChocolateKind(chocolate) }}</td>
               <td>{{ chocolate.price }}</td>
-              <td>{{ chocolate.quantity }}</td>
               <td>{{ getChocolateType(chocolate) }}</td>
-              <td><button @click="addToCart(chocolate.id)">Add to cart</button></td>
+              <td v-if="isCustomerLoggedIn">
+                <button @click="addMultipleToCart(chocolate)" 
+                        :disabled="!chocolate.quantityToAdd || chocolate.quantityToAdd <= 0">Add to cart</button>
+              </td>
+              <td v-if="isCustomerLoggedIn"><input class="quantity-input" type="number" 
+                  min="0" :max="chocolate.quantity" v-model.number="chocolate.quantityToAdd"></td>
             </tr>
           </table>
         </table>
@@ -269,6 +272,20 @@ async function wichRoleIsLoggedIn() {
     }
 }
 
+async function addMultipleToCart(chocolate) {
+  if(!shoppingCart.value){
+    alert("You need to click \"Start shopping\" first!");
+    return;
+  }
+  else{
+    if (chocolate.quantityToAdd > 0) {
+      for (let i = 0; i < chocolate.quantityToAdd; i++) {
+        await addToCart(chocolate.id);
+      }
+    }
+  }
+}
+
 async function addToCart(chocolateId){
   try {
     const response = await axios.put(`http://localhost:8080/WebShopAppREST/rest/shoppingCarts/add/${shoppingCart.value.id}/${chocolateId}`);
@@ -468,6 +485,11 @@ h3{
 .comments{
   font-size: 15px;
   font-family: 'Open Sans', sans-serif;
+}
+
+.quantity-input{
+  width: 35px;
+  height: 35px;
 }
 </style>
 

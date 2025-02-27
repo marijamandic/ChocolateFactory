@@ -179,37 +179,38 @@ public class ShoppingCartDAO{
 	}
 	
 	public ShoppingCart removeFromCart(String id, String chocolateId) {
-		ShoppingCart shoppingCart = shoppingCarts.get(id);
-		if(shoppingCart == null) {
-	    	System.out.println("Shopping cart with ID: " + id + " not found.");
-	    	return null;
+	    ShoppingCart shoppingCart = shoppingCarts.get(id);
+	    if (shoppingCart == null) {
+	        System.out.println("Shopping cart with ID: " + id + " not found.");
+	        return null;
 	    }
-		
+
 	    Chocolate chocolate = chocolateDAO.findChocolateById(chocolateId);
-	    if(chocolate == null) {
-	    	System.out.println("Chocolate with ID: " + chocolateId + " not found.");
-	    	return null;
+	    if (chocolate == null) {
+	        System.out.println("Chocolate with ID: " + chocolateId + " not found.");
+	        return null;
 	    }
-	    
-	    boolean removed = shoppingCart.getChocolates().removeIf(choco -> choco.getId().equals(chocolate.getId()));
-	    
-	    if(!removed) {
-	    	System.out.println("Chocolate with ID: " + chocolate.getId() + " is not in the cart.");
-	    	return shoppingCart;
+
+	    List<Chocolate> chocolates = shoppingCart.getChocolates();
+	    for (int i = 0; i < chocolates.size(); i++) {
+	        if (chocolates.get(i).getId().equals(chocolate.getId())) {
+	            chocolates.remove(i);
+	            break;
+	        }
 	    }
-	    
+
+	    double newPrice = chocolates.stream()
+	            .mapToDouble(Chocolate::getPrice)
+	            .sum();
+	    shoppingCart.setPrice(newPrice);
+
 	    shoppingCarts.put(id, shoppingCart);
-	    double newPrice = shoppingCart.getChocolates().stream()
-                .mapToDouble(Chocolate::getPrice)
-                .sum();
-		shoppingCart.setPrice(newPrice);
-		
-		shoppingCarts.put(id, shoppingCart);
-		writeAllShoppingCartsToFile();
-		
-		System.out.println("Chocolate with ID: " + chocolate.getId() + " removed successfully.");
-		return shoppingCart;
+	    writeAllShoppingCartsToFile();
+
+	    System.out.println("Chocolate with ID: " + chocolate.getId() + " removed successfully.");
+	    return shoppingCart;
 	}
+
 	
 	private String shoppingCartToFileFormat(ShoppingCart shoppingCart) {
 		return shoppingCart.getId() + "," + 

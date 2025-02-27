@@ -59,6 +59,13 @@ public class ShoppingService{
         return null;
     }
 	
+	@GET
+    @Path("getByUser/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<Shopping> getByUserId(@PathParam("id") String id) {
+		return shoppingDAO.findByUserId(id);
+    }
+	
 	@POST
 	@Path("/add")
 	@Produces(MediaType.APPLICATION_JSON)

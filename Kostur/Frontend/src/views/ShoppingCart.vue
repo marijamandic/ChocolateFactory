@@ -5,31 +5,40 @@
         <table v-if="chocolates.length > 0" class="table-container">
           <table class="chocolates-table">
             <tr>
+              <td></td>
               <td>Name</td>
               <td>Weight</td>
               <td>Kind</td>
               <td>Price</td>
               <td>Type</td>
+              <td>Quantity</td>
             </tr>
             <tr v-for="(chocolate, index) in chocolates" :key="chocolate.uuid" 
                 :class="{'light-row': index % 2 === 0, 'dark-row': index % 2 !== 0}">
+              <td>
+                <img :src="getChocolateImagePath(chocolate.image)" class="image" :alt="chocolate.alt">
+              </td>
               <td>{{ chocolate.name }}</td>
               <td>{{ chocolate.description }}</td>
               <td>{{ getChocolateKind(chocolate) }}</td>
               <td>{{ chocolate.price }}</td>
-              <td>{{ chocolate.quantity }}</td>
               <td>{{ getChocolateType(chocolate) }}</td>
-              <td>
-                  <img :src="getChocolateImagePath(chocolate.image)" :alt="chocolate.alt">
+              <td>{{ chocolate.quantityInCart }}</td>
+              
+              <td><button @click="removeMultipleFromCart(chocolate)"
+                      :disabled="!chocolate.quantityToRemove || chocolate.quantityToRemove <= 0">Remove</button>
               </td>
-              <td><button @click="removeFromCart(chocolate.id)">Remove</button></td>
+              <td><input class="quantity-input" type="number" 
+                min="0" :max="chocolate.quantityInCart" v-model.number="chocolate.quantityToRemove"></td>
             </tr>
           </table>
         </table>
-        <p v-else>No chocolates available.</p>
+        <h3 v-if="!shoppingCart">There is no chocolates in cart</h3>
       </div>
-      <h3 v-if="shoppingCart">Total: {{shoppingCart.price}}</h3>
-      <button @click="buy">Buy</button>
+    <h3 v-if="shoppingCart">Total: {{shoppingCart.price}}</h3>
+    <div class="button-container">
+      <button @click="buy" class="buy-button">Buy</button>
+    </div>
 </template>
 
 <script setup>
@@ -57,9 +66,17 @@ function fetchShoppingCart() {
       console.log("shopping cart: ", shoppingCart.value);
 
       if (shoppingCart.value && Array.isArray(shoppingCart.value.chocolates)) {
-        chocolates.value = shoppingCart.value.chocolates.map(chocolate => {
-          return { ...chocolate, uuid: generateUUID() };
-        });
+        const groupedChocolates = shoppingCart.value.chocolates.reduce((acc, chocolate) => {
+          const existingChocolate = acc.find(choco => choco.id === chocolate.id);
+          if (existingChocolate) {
+            existingChocolate.quantityInCart += 1;
+          } else {
+            acc.push({ ...chocolate, quantityInCart: 1 });
+          }
+          return acc;
+        }, []);
+        
+        chocolates.value = groupedChocolates;
       } else {
         console.error("No chocolates found in the shopping cart or invalid format.");
       }
@@ -69,7 +86,6 @@ function fetchShoppingCart() {
       alert('Došlo je do greške prilikom učitavanja korpe.');
     });
 }
-
 
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -122,19 +138,31 @@ function getChocolateKind(chocolate) {
   return message;
 }
 
+async function removeMultipleFromCart(chocolate) {
+  if (chocolate.quantityToRemove > 0) {
+    for (let i = 0; i < chocolate.quantityToRemove; i++) {
+      await removeFromCart(chocolate.id);
+    }
+  }
+  window.location.reload();
+}
 async function removeFromCart(chocolateId) {
   try {
     const response = await axios.put(`http://localhost:8080/WebShopAppREST/rest/shoppingCarts/remove/${shoppingCart.value.id}/${chocolateId}`);
     shoppingCart.value = response.data;
-    chocolates.value = chocolates.value.filter(chocolate => chocolate.id !== chocolateId);
+
+    const index = chocolates.value.findIndex(chocolate => chocolate.id === chocolateId);
+    if (index !== -1) {
+      chocolates.value.splice(index, 1);
+    }
 
     console.log("Updated shopping cart: ", shoppingCart.value);
-
   } catch (error) {
     console.error("Error removing from cart:", error);
-    return false; 
+    return false;
   }
 }
+
 
 async function buy() {
   if (shoppingCart.value.chocolates && shoppingCart.value.chocolates.length > 0) {
@@ -161,6 +189,7 @@ async function buy() {
       
       console.log("Order placed successfully:", response.data);
 
+      localStorage.removeItem('shoppingCartId');
       alert('Kupovina je uspešno obavljena!');
 
     } catch (error) {
@@ -248,11 +277,12 @@ button:hover {
 .chocolates-table {
     width: 80%;
     border-collapse: separate;
-    border-spacing: 0;
+    border-spacing: 0 10px;
     border-radius: 15px;
     overflow: hidden;
     justify-content: center;
 }
+
 .chocolates-table th, .chocolates-table td {
     padding: 8px;
     text-align: left;
@@ -261,11 +291,67 @@ button:hover {
     background-color: rgb(230, 200, 180);
 }
 
+.chocolates-table tr {
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); 
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.chocolates-table tr td {
+  padding: 10px;
+  background-color: inherit;
+}
+
+.chocolates-table tr:first-child {
+  font-weight: bold;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.chocolates-table tr td:first-child {
+  border-top-left-radius: 15px;
+  border-bottom-left-radius: 15px;
+}
+
+.chocolates-table tr td:last-child {
+  border-top-right-radius: 15px;
+  border-bottom-right-radius: 15px;
+}
+
 .light-row {
     background-color: rgba(210, 161, 120, 0.119);
 }
 
 .dark-row {
     background-color: rgb(210, 160, 120);
+}
+
+.image{
+  width: 200px;
+}
+
+.quantity-input{
+  width: 35px;
+  height: 35px;
+}
+
+.buy-button {
+  padding: 10px 20px;
+  background-color: white;
+  color: rgb(129, 70, 41);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  border: 2px solid rgb(129, 70, 41);
+  }
+  
+.buy-button:hover {
+  background-color: rgb(210, 160, 120);
+  color:white;
+  }
+
+.button-container {
+  display: flex;
+  justify-content: center;
 }
 </style>
