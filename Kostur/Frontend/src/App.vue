@@ -10,6 +10,12 @@
         <li><router-link to="/products">Products</router-link></li>
         <li><router-link to="/about">About Us</router-link></li>
         <li><router-link to="/contact">Contact</router-link></li>
+        <li v-if="isCustomerLoggedIn">
+          <router-link :to="`/shoppingCart/${shoppingCartId}`">
+            <span class="material-icons profile-icon">shopping_cart</span>
+          </router-link>
+        </li>
+
         <li>
           <a href="#" @click.prevent="toggleDropdown">
             <span class="material-icons profile-icon">account_circle</span>
@@ -34,16 +40,16 @@
   import { onMounted, ref, computed , watchEffect} from 'vue';
   import { useRouter } from 'vue-router';
 
-  const router = useRouter();
- // const isLoggedIn = computed(() => !!localStorage.getItem("jwtToken"));
- //const isLoggedIn = ref(false); 
+  const router = useRouter(); 
   const isLoggedIn = ref(!!localStorage.getItem("jwtToken"));
   const isAdminLoggedIn = ref(false); 
   const isManagerLoggedIn = ref(false);
+  const isCustomerLoggedIn = ref(false);
   const dropdownVisible = ref(false);
   const token = localStorage.getItem("jwtToken");
   const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
   const username = loggedInUser ? loggedInUser.username : '';
+  const shoppingCartId = ref(null);
 
   watchEffect(() => {
     isLoggedIn.value = !!token && !!loggedInUser;
@@ -51,21 +57,17 @@
 
 
   onMounted(async () => {
-    //isLoggedIn.value = !!localStorage.getItem("jwtToken");
-    
-
-      // Ako postoji token i korisnik u localStorage, postavljamo isLoggedIn na true
     isLoggedIn.value = !!token && !!loggedInUser;
     console.log("is logged in: ", isLoggedIn.value);
-    isAdminLoggedIn.value = await isAdmin();
-    isManagerLoggedIn.value = await isManager();
+    wichRoleIsLoggedIn();
+    shoppingCartId.value = localStorage.getItem("shoppingCartId");
   });
 
   function goToLogin(){
     router.push({ path: `/login` });
   }
 
-  async function isAdmin() {
+  async function wichRoleIsLoggedIn() {
     const isLoggedIn = localStorage.getItem("jwtToken");
 
     if (isLoggedIn) {
@@ -78,10 +80,13 @@
 
         if (userRole === 'ADMIN') {
           console.log("User is an admin!");
-          return true;
-        } else {
-          console.log("User is not an admin.");
-          return false; 
+          isAdminLoggedIn.value = true;
+        } else if(userRole === 'MANAGER') {
+          console.log("User is a manager!");
+          isManagerLoggedIn.value = true; 
+        } else if(userRole === 'CUSTOMER'){
+          console.log("User is a customer!");
+          isCustomerLoggedIn.value = true;
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -91,33 +96,6 @@
 
     return false; 
   }
-
-  async function isManager() {
-  const isLoggedIn = localStorage.getItem("jwtToken");
-
-  if (isLoggedIn) {
-    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    const username = loggedInUser.username;
-
-    try {
-      const response = await axios.get(`http://localhost:8080/WebShopAppREST/rest/users/getByUsername/${username}`);
-      const userRole = response.data.role;
-
-      if (userRole === 'MANAGER') {
-        console.log("User is a manager!");
-        return true;
-      } else {
-        console.log("User is not a manager.");
-        return false;
-      }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      return false;
-    }
-  }
-
-  return false;
-}
 
   function logout() {
     console.log("logged in user: ", localStorage.getItem("loggedInUser"));

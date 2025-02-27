@@ -23,7 +23,9 @@
           <td>{{ factory.rating }}</td>
         </tr>
       </table>
-      
+
+      <button @click="startShopping">Start shopping!</button>
+
       <div class="chocolates">
         <h3>Chocolates:</h3>
         <table v-if="chocolates.length > 0" class="table-container">
@@ -33,7 +35,6 @@
               <td>Description</td>
               <td>Kind</td>
               <td>Price</td>
-              <td>Quantity</td>
               <td>Type</td>
             </tr>
             <tr v-for="(chocolate, index) in chocolates" :key="chocolate.uuid" 
@@ -42,8 +43,13 @@
               <td>{{ chocolate.description }}</td>
               <td>{{ getChocolateKind(chocolate) }}</td>
               <td>{{ chocolate.price }}</td>
-              <td>{{ chocolate.quantity }}</td>
               <td>{{ getChocolateType(chocolate) }}</td>
+              <td v-if="isCustomerLoggedIn">
+                <button @click="addMultipleToCart(chocolate)" 
+                        :disabled="!chocolate.quantityToAdd || chocolate.quantityToAdd <= 0">Add to cart</button>
+              </td>
+              <td v-if="isCustomerLoggedIn"><input class="quantity-input" type="number" 
+                  min="0" :max="chocolate.quantity" v-model.number="chocolate.quantityToAdd"></td>
             </tr>
           </table>
         </table>
@@ -88,11 +94,15 @@ const route = useRoute();
 const factory = ref(null);
 const chocolates = ref([]);
 const comments = ref([]);
+const isAdminLoggedIn = ref(false); 
+const isManagerLoggedIn = ref(false);
+const isCustomerLoggedIn = ref(false);
+const shoppingCart = ref(null);
 
 onMounted(() => {
-  // Učitavanje informacija o fabrici
   fetchFactory();
   fetchComments();
+  wichRoleIsLoggedIn();
 });
 
 const getFactoryImagePath = (imageName) => `/assets/FactoryLogos/${imageName}`;
@@ -103,7 +113,7 @@ function fetchFactory() {
     .then(response => {
       factory.value = response.data;
       chocolates.value = factory.value.chocolates.map(chocolate => {
-        return { ...chocolate, uuid: generateUUID() }; // Dodavanje uuid-a za svaku čokoladu
+        return { ...chocolate, uuid: generateUUID() };
       });
     })
     .catch(error => {
@@ -197,6 +207,98 @@ function formatTime(time) {
   const [hour, minute] = time.split(':');
   return `${hour}:${minute}`;
 }
+
+async function wichRoleIsLoggedIn() {
+    const isLoggedIn = localStorage.getItem("jwtToken");
+
+    if (isLoggedIn) {
+      const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+      const username = loggedInUser.username; 
+
+      try {
+        const response = await axios.get(`http://localhost:8080/WebShopAppREST/rest/users/getByUsername/${username}`);
+        const userRole = response.data.role;
+
+        if (userRole === 'ADMIN') {
+          console.log("User is an admin!");
+          isAdminLoggedIn.value = true;
+        } else if(userRole === 'MANAGER') {
+          console.log("User is a manager!");
+          isManagerLoggedIn.value = true; 
+        } else if(userRole === 'CUSTOMER'){
+          console.log("User is a customer!");
+          isCustomerLoggedIn.value = true;
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        return false; 
+      }
+    }
+
+    return false; 
+  }
+
+  async function startShopping(){
+    const isLoggedIn = localStorage.getItem("jwtToken");
+
+    if (isLoggedIn) {
+      const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+      const username = loggedInUser.username; 
+
+      try {
+        const response = await axios.get(`http://localhost:8080/WebShopAppREST/rest/users/getByUsername/${username}`);
+        const user = response.data;
+
+        const requestBody = {
+          chocolates: [],
+          user: {
+            id: user.id
+          }
+        };
+
+        console.log("request body: ", requestBody);
+      const cartResponse = await axios.post("http://localhost:8080/WebShopAppREST/rest/shoppingCarts/create", requestBody);
+      
+      console.log("Shopping cart created successfully:", cartResponse.data);
+      shoppingCart.value = cartResponse.data;
+      localStorage.setItem("shoppingCartId", shoppingCart.value.id);
+      console.log("local storage: ", localStorage.getItem("shoppingCartId"));
+      return cartResponse.data;
+
+      } catch (error) {
+        console.error("Error creating shopping cart:", error);
+        return false; 
+      }
+    }
+}
+
+async function addMultipleToCart(chocolate) {
+  if(!shoppingCart.value){
+    alert("You need to click \"Start shopping\" first!");
+    return;
+  }
+  else{
+    if (chocolate.quantityToAdd > 0) {
+      for (let i = 0; i < chocolate.quantityToAdd; i++) {
+        await addToCart(chocolate.id);
+      }
+    }
+  }
+}
+
+async function addToCart(chocolateId){
+  try {
+    const response = await axios.put(`http://localhost:8080/WebShopAppREST/rest/shoppingCarts/add/${shoppingCart.value.id}/${chocolateId}`);
+    shoppingCart.value = response.data;
+    console.log("updated cart: ", shoppingCart.value);
+
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    return false; 
+  }
+}
+
+
 
 </script>
 
@@ -383,6 +485,11 @@ h3{
 .comments{
   font-size: 15px;
   font-family: 'Open Sans', sans-serif;
+}
+
+.quantity-input{
+  width: 35px;
+  height: 35px;
 }
 </style>
 

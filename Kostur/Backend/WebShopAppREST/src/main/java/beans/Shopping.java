@@ -7,25 +7,20 @@ import beans.enums.Status;
 
 public class Shopping {
 	private String id;
-	private List<Chocolate> boughtChocolates;
 	private Factory factory;
 	private LocalDateTime shoppingDateTime;
-	private double price;
 	private Status status;
-	private User customer;
+	private ShoppingCart shoppingCart;
 	
 	public Shopping() {}
 
-	public Shopping(String id, List<Chocolate> boughtChocolates, Factory factory, LocalDateTime shoppingDateTime,
-			double price, Status status, User customer) {
+	public Shopping(String id, Factory factory, LocalDateTime shoppingDateTime, Status status, ShoppingCart shoppingCart) {
 		super();
 		this.id = id;
-		this.boughtChocolates = boughtChocolates;
 		this.factory = factory;
 		this.shoppingDateTime = shoppingDateTime;
-		this.price = price;
 		this.status = status;
-		this.customer = customer;
+		this.shoppingCart = shoppingCart;
 	}
 
 	public String getId() {
@@ -34,14 +29,6 @@ public class Shopping {
 
 	public void setId(String id) {
 		this.id = id;
-	}
-
-	public List<Chocolate> getBoughtChocolates() {
-		return boughtChocolates;
-	}
-
-	public void setBoughtChocolates(List<Chocolate> boughtChocolates) {
-		this.boughtChocolates = boughtChocolates;
 	}
 
 	public Factory getFactory() {
@@ -60,14 +47,6 @@ public class Shopping {
 		this.shoppingDateTime = shoppingDateTime;
 	}
 
-	public double getPrice() {
-		return price;
-	}
-
-	public void setPrice(double price) {
-		this.price = price;
-	}
-
 	public Status getStatus() {
 		return status;
 	}
@@ -76,13 +55,11 @@ public class Shopping {
 		this.status = status;
 	}
 
-	public User getCustomer() {
-		return customer;
+	public ShoppingCart getShoppingCart() {
+		return shoppingCart;
 	}
 
-	public void setCustomer(User customer) {
-		this.customer = customer;
+	public void setShoppingCart(ShoppingCart shoppingCart) {
+		this.shoppingCart = shoppingCart;
 	}
-	
-	
 }

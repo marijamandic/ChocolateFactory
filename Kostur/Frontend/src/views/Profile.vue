@@ -29,6 +29,18 @@
         <div class="bottom-text" v-if="user.customerType.type !== 'GOLD'">
           <p>You need {{ user.customerType.score - user.score }} more points to upgrade your status</p>
         </div>
+
+        <div class="shoppings">
+          <h3>My shoppings:</h3>
+          <div class="item" v-for="f in shopppings" :key="f.id">
+            <div class="details">
+              <div class="name">{{ f.factory.name }}</div>
+              <div class="location">{{ f.shoppingDateTime }}</div>
+            </div>
+            <button class="cancel-button" @click="goToShoppingInfo(f)">See order</button>
+            <button class="cancel-button" @click="cancelOrder(f)">Cancel order</button>
+          </div>
+        </div>
       </div>
 
       <!-- ADMIN -->
@@ -254,6 +266,18 @@
   </div>
 </div>
 
+<!-- Pregled kupovine -->
+<div v-if="showChocolateModal && selectedShopping" class="modal-overlay">
+  <div class="modal">
+    <h2>Bought chocolates</h2>
+      <div v-for="c in selectedShopping.shoppingCart.chocolates">
+          <label>{{ c.name }}</label>
+          <!-- <div class="location">{{ f.shoppingDateTime }}</div> -->
+      </div>
+    <button type="button" @click="showChocolateModal = false">Close</button>
+  </div>
+</div>
+
 </template>
 
 <script setup>
@@ -280,12 +304,16 @@ const chocolate = ref({
 const showEditModal = ref(false);
 const editedChocolate = ref({});
 const showEditProfileModal = ref(false);
+const showChocolateModal = ref(false);
 const editedUser = ref({});
 const allUsers = ref([]);
+const shopppings = ref([]);
+const selectedShopping = ref(null);
 
 onMounted(async () => {
   await fetchUser();
-    await fetchAllUsers();
+  await fetchAllUsers();
+  await fetchUsersShoppings();
 });
 
 const getFactoryImagePath = (imageName) => `/assets/FactoryLogos/${imageName}`;
@@ -452,6 +480,33 @@ function deleteChocolate(chocolateId) {
     });
 }
 
+async function fetchUsersShoppings() {
+  try {
+    const response = await axios.get(`http://localhost:8080/WebShopAppREST/rest/shoppings/getByUser/${user.value.id}`);
+    console.log("user id: ", user.value.id);
+    shopppings.value = response.data;
+  } catch (error) {
+    console.error('Error fetching users shoppings:', error);
+  }
+}
+
+function goToShoppingInfo(shopping){
+  selectedShopping.value = shopping;
+  showChocolateModal.value = true;
+}
+
+async function cancelOrder(shopping){
+  console.log("kliknula sam");
+  try {
+    const response = await axios.put(`http://localhost:8080/WebShopAppREST/rest/shoppings/remove/${shopping.id}`);
+    shopping.value = response.data;
+    alert("shopping canceled");
+    window.location.reload();
+  } catch (error) {
+    console.error('Error canceling order:', error);
+  }
+}
+
 function getChocolateType(chocolate) {
   let message;
   switch (chocolate.type) {
@@ -547,20 +602,20 @@ function getRole(role){
 .left-column {
   display: flex;
   justify-content: left;
-  width: 30%;
+  width: 20%;
   padding: 20px;
   border-radius: 8px;
   color: rgb(129, 70, 41);
 }
 
 .right-column {
-  width: 70%;
+  width: 80%;
   padding: 20px;
   color: rgb(129, 70, 41);
 }
 
 .profile-info {
-  width: 70%;
+  width: 100%;
   margin-bottom: 20px;
   border-right: 2px solid rgb(210, 160, 120);
   height: 100%;
@@ -774,4 +829,56 @@ h3{
   gap: 10px;
   justify-content: center;
 }
+
+.item {
+  display: flex;
+  width: 75%;
+  height:250px;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(210, 160, 120);
+  margin: 0 auto;
+  border-radius: 15px;
+  margin-bottom: 10px;
+  padding-left: 30px;
+  padding-right: 30px;
+  padding-bottom:7px;
+  padding-top:7px;
+}
+
+.details {
+  flex: 1;
+}
+  
+.name {
+  font-weight: bold;
+  margin-bottom: 5px;
+  margin-top: 5px; 
+  color: white;
+  font-size: 45px;
+  font-family: 'Times New Roman', Times, serif;
+}
+  
+.location {
+  font-style: italic;
+  color: white;
+  margin-bottom: 5px;
+  margin-top: 5px;
+  font-size: 20px;
+}
+
+.cancel-button {
+  padding: 10px 20px;
+  background-color: white;
+  color: rgb(129, 70, 41);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  border: 2px solid rgb(129, 70, 41);
+}
+  
+.cancel-button:hover {
+  background-color: rgb(210, 160, 120);
+  color:white;
+  }
 </style>
