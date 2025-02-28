@@ -99,19 +99,8 @@
                 <td>{{ getChocolateType(chocolate) }}</td>              
                 <td>
                   <div class="action-buttons">
-                    <button 
-                      @click="editChocolate(chocolate.id)" 
-                      
-                      :class="{'light-btn': index % 2 !== 0}"
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      @click="deleteChocolate(chocolate.id)" 
-                      :class="{'light-btn': index % 2 !== 0}"
-                    >
-                      Delete
-                    </button>
+                    <button @click="editChocolate(chocolate.id)" :class="{'light-btn': index % 2 !== 0}">Edit</button>
+                    <button @click="deleteChocolate(chocolate.id)" :class="{'light-btn': index % 2 !== 0}">Delete</button>
                   </div>
                 </td>
              </tr>
