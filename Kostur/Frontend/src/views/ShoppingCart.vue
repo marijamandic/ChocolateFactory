@@ -35,7 +35,7 @@
         </table>
         <h3 v-if="!shoppingCart">There is no chocolates in cart</h3>
       </div>
-    <h3 v-if="shoppingCart">Total: {{shoppingCart.price}}</h3>
+    <h3 v-if="shoppingCart">Total: {{shoppingCart.price.toFixed(2)}}</h3>
     <div class="button-container">
       <button @click="buy" class="buy-button">Buy</button>
     </div>

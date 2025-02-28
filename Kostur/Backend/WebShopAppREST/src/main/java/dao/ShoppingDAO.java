@@ -111,6 +111,12 @@ public class ShoppingDAO{
 			   .collect(Collectors.toList());
 	}
 	
+	public List<Shopping> findByFactoryId(String id){
+		return shoppings.values().stream()
+				   .filter(shopping -> (shopping.getFactory().getId().equals(id)))
+				   .collect(Collectors.toList());
+	}
+	
 	public String generateNewId() {
 	    int maxId = 0;
 

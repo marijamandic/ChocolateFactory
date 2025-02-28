@@ -127,5 +127,12 @@ public class UserService{
         }
 	}
 	
-	
+	@GET
+	@Path("/check-username/{username}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response checkUsername(@PathParam("username") String username) {
+	    boolean exists = userDAO.checkUsername(username);
+
+	    return Response.ok(exists).build();
+	}
 }

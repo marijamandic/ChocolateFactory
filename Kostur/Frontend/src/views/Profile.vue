@@ -8,7 +8,7 @@
           <p>            
             <span class="material-icons profile-icon">account_circle</span>
           </p>
-          <h3>{{ user?.name }} {{ user?.surname }}</h3>
+          <h3 class="user">{{ user?.name }} {{ user?.surname }}</h3>
           <p> @{{ user?.username }}</p>
           <p> {{ user?.role }}</p>
           <button  @click="editUser(user.id)" >Edit Profile</button>
@@ -23,11 +23,11 @@
     
         <div class="text-section">
           <h1>You are a {{user.customerType.type}} customer!</h1>
-          <p>Your score is {{user.score}}</p>
+          <p>Your score is {{user.score.toFixed(2)}}</p>
         </div>
     
         <div class="bottom-text" v-if="user.customerType.type !== 'GOLD'">
-          <p>You need {{ user.customerType.score - user.score }} more points to upgrade your status</p>
+          <p>You need {{ (user.customerType.score - user.score).toFixed(2) }} more points to upgrade your status</p>
         </div>
 
         <div class="shoppings">
@@ -35,7 +35,7 @@
           <div class="item" v-for="f in shopppings" :key="f.id">
             <div class="details">
               <div class="name">{{ f.factory.name }}</div>
-              <div class="location">{{ f.shoppingDateTime }}</div>
+              <div class="location">{{ formatDate(f.shoppingDateTime) }}</div>
             </div>
             <button class="cancel-button" @click="goToShoppingInfo(f)">See order</button>
             <button class="cancel-button" @click="cancelOrder(f)">Cancel order</button>
@@ -46,7 +46,7 @@
       <!-- ADMIN -->
       <div class="right-column" v-if="user?.role === 'ADMIN'">
 
-      <div class="users-list">
+      <div class="chocolates-list">
         <h3>Users</h3>
         <table v-if="allUsers.length > 0" class="table-container">
           <table class="users-table">
@@ -74,14 +74,13 @@
       <div class="right-column" v-if="user?.role === 'MANAGER'">
         <div class="factory-info">
           <h2>{{ factory?.name }}</h2>
-          <!-- <img :src="getFactoryImagePath(factory?.logo)"> -->
-          <p>Location: {{ factory?.location.address }}</p>
+          <img class="factory-image" :src="getFactoryImagePath(factory?.logo)">
         </div>
         
         <div class="chocolates-list">
           <h3>Chocolates</h3>
           <table v-if="chocolates.length > 0" class="table-container">
-            <table class="chocolates-table">
+            <table class="users-table">
               <tr>
                 <td>Name</td>
                 <td>Description</td>
@@ -92,34 +91,34 @@
               </tr>
               <tr v-for="(chocolate, index) in chocolates" :key="chocolate.id" 
                 :class="{'light-row': index % 2 === 0, 'dark-row': index % 2 !== 0}">
-              <td>{{ chocolate.name }}</td>
-              <td>{{ chocolate.description }}</td>
-              <td>{{ getChocolateKind(chocolate) }}</td>
-              <td>{{ chocolate.price }}</td>
-              <td>{{ chocolate.quantity }}</td>
-              <td>{{ getChocolateType(chocolate) }}</td>              
-              <td>
-                <div class="action-buttons">
-                  <button 
-                    @click="editChocolate(chocolate.id)" 
-                    
-                    :class="{'light-btn': index % 2 !== 0}"
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    @click="deleteChocolate(chocolate.id)" 
-                    :class="{'light-btn': index % 2 !== 0}"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </td>
-              
-            </tr>
+                <td>{{ chocolate.name }}</td>
+                <td>{{ chocolate.description }}</td>
+                <td>{{ getChocolateKind(chocolate) }}</td>
+                <td>{{ chocolate.price }}</td>
+                <td>{{ chocolate.quantity }}</td>
+                <td>{{ getChocolateType(chocolate) }}</td>              
+                <td>
+                  <div class="action-buttons">
+                    <button @click="editChocolate(chocolate.id)" :class="{'light-btn': index % 2 !== 0}">Edit</button>
+                    <button @click="deleteChocolate(chocolate.id)" :class="{'light-btn': index % 2 !== 0}">Delete</button>
+                  </div>
+                </td>
+             </tr>
+            </table>
           </table>
-        </table>
-          <button @click="showModal = true">Add Chocolate</button>
+          <button class="add-chocolate" @click="showModal = true">Add Chocolate</button>
+        </div>
+
+        <div class="shoppings">
+          <h3>Shoppings in factory:</h3>
+          <div class="item" v-for="f in shoppingsByFactory" :key="f.id">
+            <div class="details">
+              <div class="name">{{ f.shoppingCart.user.name }} {{ f.shoppingCart.user.surname }}</div>
+              <div class="location">{{ formatDate(f.shoppingDateTime) }}</div>
+              <div class="status">Shopping status: {{ getShoppingStatus(f) }}</div>
+            </div>
+            <button class="cancel-button" @click="goToShoppingInfo(f)">See order</button>
+          </div>
         </div>
       </div>
     </div>
@@ -271,8 +270,7 @@
   <div class="modal">
     <h2>Bought chocolates</h2>
       <div v-for="c in selectedShopping.shoppingCart.chocolates">
-          <label>{{ c.name }}</label>
-          <!-- <div class="location">{{ f.shoppingDateTime }}</div> -->
+          <div class="chocolate">{{ c.name }}</div>
       </div>
     <button type="button" @click="showChocolateModal = false">Close</button>
   </div>
@@ -284,7 +282,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
-import { format } from 'date-fns';
+import dayjs from 'dayjs';
 
 const route = useRoute();
 const username = route.params.username;
@@ -309,11 +307,13 @@ const editedUser = ref({});
 const allUsers = ref([]);
 const shopppings = ref([]);
 const selectedShopping = ref(null);
+const shoppingsByFactory = ref([]);
 
 onMounted(async () => {
   await fetchUser();
   await fetchAllUsers();
   await fetchUsersShoppings();
+  await fetchShoppingsByFactory();
 });
 
 const getFactoryImagePath = (imageName) => `/assets/FactoryLogos/${imageName}`;
@@ -360,6 +360,15 @@ async function fetchChocolates(factoryId) {
     chocolates.value = chocolatesResponse.data;
   } catch (error) {
     console.error('Error fetching chocolates:', error);
+  }
+}
+
+async function fetchShoppingsByFactory() {
+  try {
+    const response = await axios.get(`http://localhost:8080/WebShopAppREST/rest/shoppings/getByFactory/${user.value.factory.id}`);
+    shoppingsByFactory.value = response.data;
+  } catch (error) {
+    console.error('Error fetching shoppings:', error);
   }
 }
 
@@ -507,6 +516,10 @@ async function cancelOrder(shopping){
   }
 }
 
+function formatDate(date){
+  return dayjs(date).format('DD.MM.YYYY. HH:mm');
+}
+
 function getChocolateType(chocolate) {
   let message;
   switch (chocolate.type) {
@@ -587,6 +600,27 @@ function getRole(role){
 
 }
 
+function getShoppingStatus(shopping){
+  let message;
+  switch (shopping.status){
+    case "PROCESSING":
+      message = "Processing";
+      break;
+    case "APPROVED":
+      message = "Approved";
+      break;
+    case "REJECTED":
+      message = "Rejected";
+      break;
+    case "CANCELED":
+      message = "Canceled";
+      break;
+    default:
+      message = "Unknown status";
+  }
+  return message;
+}
+
 </script>
 
 <style scoped>
@@ -609,6 +643,9 @@ function getRole(role){
 }
 
 .right-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   width: 80%;
   padding: 20px;
   color: rgb(129, 70, 41);
@@ -730,6 +767,13 @@ button:hover {
   border: 2px solid rgb(129, 70, 41);
 }
 
+.chocolate{
+  display: block;
+  margin-bottom: 5px;
+  color: white;
+  font-size: 15px;
+}
+
 input, select, textarea {
   width: 100%;
   margin-bottom: 10px;
@@ -762,6 +806,17 @@ h3{
   margin-top: 40px
 }
 
+.user{
+  font-size: 30px;
+  margin: auto;
+  font-family: 'Times New Roman', Times, serif;
+  text-align: left;
+  color: rgb(210, 160, 120);
+  width: 100%;
+  margin-bottom: 10px;
+  margin-top: 40px
+}
+
 .chocolates-table {
   width: 80%;
   margin: auto;
@@ -780,7 +835,7 @@ h3{
 }
 
 .users-table {
-  width: 800px;
+  width: 1000px;
   margin: auto;
   border-collapse: separate;
   border-spacing: 0;
@@ -791,6 +846,7 @@ h3{
 .users-table th, .users-table td {
   padding: 8px;
   height: 40px;
+  font-size: 18px;
   text-align: left;
 }
 .users-table th {
@@ -867,6 +923,14 @@ h3{
   font-size: 20px;
 }
 
+.status {
+  font-style: normal;
+  color: white;
+  margin-bottom: 5px;
+  margin-top: 5px;
+  font-size: 20px;
+}
+
 .cancel-button {
   padding: 10px 20px;
   background-color: white;
@@ -881,4 +945,22 @@ h3{
   background-color: rgb(210, 160, 120);
   color:white;
   }
+
+.factory-image{
+  display: flex;
+  justify-content: center;
+}
+
+.chocolates-list{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.add-chocolate{
+  display: block;
+  margin: 0 auto;
+  margin-top: 10px;
+  width: 200px;
+}
 </style>
